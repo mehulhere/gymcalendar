@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
-import { Weight, Target, LogOut, Save } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { Weight, Target, LogOut, Save, Edit2, X, Check, Sun, Moon, Monitor } from 'lucide-react'
 
 interface WeighIn {
     _id: string
@@ -28,14 +30,22 @@ export default function ProfilePage() {
     const { user, logout, accessToken } = useAuthStore()
     const router = useRouter()
     const { toast } = useToast()
+    const { theme, setTheme } = useTheme()
     const [weighIns, setWeighIns] = useState<WeighIn[]>([])
     const [goals, setGoals] = useState<Goal[]>([])
     const [newWeight, setNewWeight] = useState('')
     const [isAddingWeight, setIsAddingWeight] = useState(false)
+    const [userSettings, setUserSettings] = useState<any>(null)
+    const [isEditingGoal, setIsEditingGoal] = useState(false)
+    const [targetWeight, setTargetWeight] = useState('')
+    const [targetDays, setTargetDays] = useState('')
+    const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
+        setMounted(true)
         fetchWeighIns()
         fetchGoals()
+        fetchUserSettings()
     }, [])
 
     const fetchWeighIns = async () => {
@@ -63,6 +73,77 @@ export default function ProfilePage() {
             }
         } catch (error) {
             console.error('Failed to fetch goals:', error)
+        }
+    }
+
+    const fetchUserSettings = async () => {
+        try {
+            const response = await fetch('/api/user/settings', {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setUserSettings(data.settings)
+                if (data.settings.targetWeight) {
+                    setTargetWeight(data.settings.targetWeight.toString())
+                }
+                if (data.settings.targetDays) {
+                    setTargetDays(data.settings.targetDays.toString())
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch user settings:', error)
+        }
+    }
+
+    const updateTargetGoal = async () => {
+        const weight = parseFloat(targetWeight)
+        const days = parseInt(targetDays)
+
+        if (!weight || weight <= 0) {
+            toast({
+                title: 'Error',
+                description: 'Please enter a valid target weight',
+                variant: 'destructive',
+            })
+            return
+        }
+
+        if (!days || days <= 0) {
+            toast({
+                title: 'Error',
+                description: 'Please enter valid number of days',
+                variant: 'destructive',
+            })
+            return
+        }
+
+        try {
+            const response = await fetch('/api/user/settings', {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    targetWeight: weight,
+                    targetDays: days,
+                }),
+            })
+
+            if (response.ok) {
+                toast({ title: 'Target goal updated!' })
+                setIsEditingGoal(false)
+                fetchUserSettings()
+            } else {
+                throw new Error('Failed to update')
+            }
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: 'Failed to update target goal',
+                variant: 'destructive',
+            })
         }
     }
 
@@ -193,44 +274,181 @@ export default function ProfilePage() {
                     </CardContent>
                 </Card>
 
-                {/* Goals */}
+                {/* Target Weight Goal */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Target className="h-5 w-5" />
-                            Goals
-                        </CardTitle>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="flex items-center gap-2">
+                                <Target className="h-5 w-5" />
+                                Target Weight Goal
+                            </CardTitle>
+                            {!isEditingGoal && userSettings?.targetWeight && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsEditingGoal(true)}
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        {goals.length > 0 ? (
+                        {isEditingGoal ? (
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="targetWeight">Target Weight (kg)</Label>
+                                    <Input
+                                        id="targetWeight"
+                                        type="number"
+                                        placeholder="90"
+                                        value={targetWeight}
+                                        onChange={(e) => setTargetWeight(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="targetDays">Days to Achieve Goal</Label>
+                                    <Input
+                                        id="targetDays"
+                                        type="number"
+                                        placeholder="100"
+                                        value={targetDays}
+                                        onChange={(e) => setTargetDays(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        className="flex-1"
+                                        onClick={updateTargetGoal}
+                                    >
+                                        <Check className="h-4 w-4 mr-1" />
+                                        Save
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setIsEditingGoal(false)
+                                            // Reset to original values
+                                            if (userSettings?.targetWeight) {
+                                                setTargetWeight(userSettings.targetWeight.toString())
+                                            }
+                                            if (userSettings?.targetDays) {
+                                                setTargetDays(userSettings.targetDays.toString())
+                                            }
+                                        }}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : userSettings?.targetWeight ? (
                             <div className="space-y-3">
-                                {goals.map(goal => {
-                                    const progress = goal.target > 0
-                                        ? (goal.current / goal.target) * 100
-                                        : 0
-
-                                    return (
-                                        <div key={goal._id} className="space-y-2">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="font-medium capitalize">{goal.type}</span>
-                                                <span className="text-muted-foreground">
-                                                    {goal.current} / {goal.target}
-                                                </span>
-                                            </div>
-                                            <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-emerald-500 transition-all"
-                                                    style={{ width: `${Math.min(progress, 100)}%` }}
-                                                />
-                                            </div>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-3xl font-bold">{userSettings.targetWeight} kg</span>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    {userSettings.targetDays} days goal
+                                </div>
+                                {latestWeight && (
+                                    <div className="space-y-2 pt-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">Progress</span>
+                                            <span className="font-medium">
+                                                {latestWeight.toFixed(1)} kg / {userSettings.targetWeight} kg
+                                            </span>
                                         </div>
-                                    )
-                                })}
+                                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full transition-all ${latestWeight <= userSettings.targetWeight
+                                                    ? 'bg-emerald-500'
+                                                    : 'bg-red-500'
+                                                    }`}
+                                                style={{
+                                                    width: `${Math.min((latestWeight / userSettings.targetWeight) * 100, 100)}%`
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="text-sm">
+                                            {latestWeight > userSettings.targetWeight ? (
+                                                <span className="text-red-500">
+                                                    {(latestWeight - userSettings.targetWeight).toFixed(1)} kg to lose
+                                                </span>
+                                            ) : latestWeight < userSettings.targetWeight ? (
+                                                <span className="text-emerald-500">
+                                                    {(userSettings.targetWeight - latestWeight).toFixed(1)} kg to gain
+                                                </span>
+                                            ) : (
+                                                <span className="text-emerald-500">🎉 Goal achieved!</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                                No goals set yet
-                            </p>
+                            <div className="text-center py-4">
+                                <p className="text-sm text-muted-foreground mb-3">
+                                    No target weight set yet
+                                </p>
+                                <Button onClick={() => setIsEditingGoal(true)}>
+                                    <Target className="h-4 w-4 mr-2" />
+                                    Set Target Weight
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Theme Settings */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Appearance</CardTitle>
+                        <CardDescription>Choose your preferred theme</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {mounted && (
+                            <div className="grid grid-cols-3 gap-3">
+                                <button
+                                    onClick={() => setTheme('light')}
+                                    className={`
+                                        flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all
+                                        ${theme === 'light'
+                                            ? 'border-primary bg-primary/10'
+                                            : 'border-muted hover:border-muted-foreground/30'
+                                        }
+                                    `}
+                                >
+                                    <Sun className="h-5 w-5" />
+                                    <span className="text-sm font-medium">Light</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setTheme('dark')}
+                                    className={`
+                                        flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all
+                                        ${theme === 'dark'
+                                            ? 'border-primary bg-primary/10'
+                                            : 'border-muted hover:border-muted-foreground/30'
+                                        }
+                                    `}
+                                >
+                                    <Moon className="h-5 w-5" />
+                                    <span className="text-sm font-medium">Dark</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setTheme('system')}
+                                    className={`
+                                        flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all
+                                        ${theme === 'system'
+                                            ? 'border-primary bg-primary/10'
+                                            : 'border-muted hover:border-muted-foreground/30'
+                                        }
+                                    `}
+                                >
+                                    <Monitor className="h-5 w-5" />
+                                    <span className="text-sm font-medium">System</span>
+                                </button>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

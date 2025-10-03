@@ -12,6 +12,7 @@ interface VolumeData {
     totalVolume: number
     weeklyVolume: number
     muscleVolumes: Record<string, number>
+    muscleSets: Record<string, number>
     workoutCount: number
     streak: number
 }
@@ -28,6 +29,7 @@ export default function StatsPage() {
         totalVolume: 0,
         weeklyVolume: 0,
         muscleVolumes: {},
+        muscleSets: {},
         workoutCount: 0,
         streak: 0,
     })
@@ -97,6 +99,7 @@ export default function StatsPage() {
     const calculateVolumes = (sessions: any[]) => {
         let totalVolume = 0
         const muscleVolumes: Record<string, number> = {}
+        const muscleSets: Record<string, number> = {}
         let workoutCount = 0
 
         sessions.forEach(session => {
@@ -106,6 +109,8 @@ export default function StatsPage() {
             }
 
             session.exercises?.forEach((exercise: any) => {
+                const primaryMuscles = exercise.exerciseId?.primary_muscles || []
+
                 exercise.sets?.forEach((set: any) => {
                     // Check for valid reps and weight (> 0)
                     if (set.reps > 0 && set.weight > 0) {
@@ -113,22 +118,23 @@ export default function StatsPage() {
                         totalVolume += volume
 
                         // Add to muscle volumes (using original case from database)
-                        const primaryMuscles = exercise.exerciseId?.primary_muscles || []
                         primaryMuscles.forEach((muscleName: string) => {
                             // Store with the exact case from database
                             muscleVolumes[muscleName] = (muscleVolumes[muscleName] || 0) + volume
+                            muscleSets[muscleName] = (muscleSets[muscleName] || 0) + 1
                         })
                     }
                 })
             })
         })
 
-        console.log('Calculated volume:', { totalVolume, muscleVolumes, workoutCount, sessions })
+        console.log('Calculated volume:', { totalVolume, muscleVolumes, muscleSets, workoutCount, sessions })
 
         setVolumeData({
             totalVolume,
             weeklyVolume: totalVolume,
             muscleVolumes,
+            muscleSets,
             workoutCount,
             streak: 0, // Would calculate from attendance
         })
@@ -204,7 +210,7 @@ export default function StatsPage() {
                         <CardDescription>Weekly training volume by muscle group</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <MuscleHeatmap muscleVolumes={volumeData.muscleVolumes} />
+                        <MuscleHeatmap muscleVolumes={volumeData.muscleVolumes} muscleSets={volumeData.muscleSets} />
                     </CardContent>
                 </Card>
 

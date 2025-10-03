@@ -7,8 +7,8 @@ import { withAuth, AuthenticatedRequest } from '@/lib/auth-middleware'
 async function getSessions(req: AuthenticatedRequest) {
   try {
     const searchParams = req.nextUrl.searchParams
-    const from = searchParams.get('from')
-    const to = searchParams.get('to')
+    const from = searchParams.get('from') || searchParams.get('start')
+    const to = searchParams.get('to') || searchParams.get('end')
 
     await dbConnect()
 
@@ -21,7 +21,7 @@ async function getSessions(req: AuthenticatedRequest) {
     }
 
     const sessions = await Session.find(query)
-      .populate('exercises.exerciseId', 'name equipment')
+      .populate('exercises.exerciseId', 'name equipment primary_muscles secondary_muscles')
       .sort({ date: -1 })
       .limit(100)
       .lean()
