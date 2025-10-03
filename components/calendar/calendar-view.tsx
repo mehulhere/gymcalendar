@@ -152,67 +152,93 @@ export function CalendarView() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen pb-20 bg-gradient-to-b from-background to-muted/20">
-            <div className="flex-1 p-4 md:p-6 max-w-6xl mx-auto w-full space-y-4 md:space-y-6">
-                {/* Header with View Toggle */}
-                <div className="flex items-start justify-between gap-2 md:gap-4 flex-wrap">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                            Welcome back, {user?.name}
-                        </h1>
-                        <p className="text-sm text-muted-foreground hidden md:block">
-                            Track your fitness journey and stay consistent
-                        </p>
-                    </div>
+        <div className="flex flex-col min-h-screen pb-24 bg-gradient-to-br from-background via-background to-primary/5">
+            <div className="flex-1 p-4 md:p-6 max-w-6xl mx-auto w-full space-y-6 animate-scale-in">
+                {/* Minimalist Header */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-3xl md:text-5xl font-black tracking-tight">
+                                    <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500 bg-clip-text text-transparent">
+                                        Hello,
+                                    </span>
+                                    {' '}
+                                    <span className="text-foreground">
+                                        {user?.name?.split(' ')[0]}
+                                    </span>
+                                </h1>
+                            </div>
+                            <p className="text-sm md:text-base text-muted-foreground font-medium">
+                                Let's crush today's goals 💪
+                            </p>
+                        </div>
 
-                    {/* View Mode Toggle */}
-                    <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
-                        <button
-                            onClick={() => setViewMode('month')}
-                            className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all
-                ${viewMode === 'month'
-                                    ? 'bg-background shadow-sm text-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
-                                }
-              `}
-                        >
-                            <CalendarIcon className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span className="hidden sm:inline">Month</span>
-                        </button>
-                        <button
-                            onClick={() => setViewMode('heatmap')}
-                            className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition-all
-                ${viewMode === 'heatmap'
-                                    ? 'bg-background shadow-sm text-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
-                                }
-              `}
-                        >
-                            <Grid3x3 className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span className="hidden sm:inline">Heatmap</span>
-                        </button>
+                        {/* View Mode Toggle - Redesigned */}
+                        <div className="flex items-center gap-2 p-1.5 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
+                            <button
+                                onClick={() => setViewMode('month')}
+                                className={`
+                                    relative px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all duration-300
+                                    ${viewMode === 'month'
+                                        ? 'text-white'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                    }
+                                `}
+                            >
+                                {viewMode === 'month' && (
+                                    <div className="absolute inset-0 gradient-emerald rounded-xl" />
+                                )}
+                                <div className="relative z-10 flex items-center gap-1.5">
+                                    <CalendarIcon className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Month</span>
+                                </div>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('heatmap')}
+                                className={`
+                                    relative px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all duration-300
+                                    ${viewMode === 'heatmap'
+                                        ? 'text-white'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                    }
+                                `}
+                            >
+                                {viewMode === 'heatmap' && (
+                                    <div className="absolute inset-0 gradient-emerald rounded-xl" />
+                                )}
+                                <div className="relative z-10 flex items-center gap-1.5">
+                                    <Grid3x3 className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Heatmap</span>
+                                </div>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Calendar Views */}
-                <div className="bg-card/50 backdrop-blur-sm rounded-2xl md:rounded-3xl p-4 md:p-8 border shadow-2xl">
-                    {viewMode === 'month' ? (
-                        <ModernCalendar
-                            calendarData={calendarData}
-                            selectedDate={date}
-                            onDateSelect={setDate}
-                            onCheckIn={handleCheckIn}
-                        />
-                    ) : (
-                        <HeatmapCalendar
-                            calendarData={calendarData}
-                            selectedDate={date}
-                            onDateSelect={setDate}
-                            onCheckIn={handleCheckIn}
-                        />
-                    )}
+                {/* Calendar Card - Enhanced */}
+                <div className="relative">
+                    {/* Glow effect */}
+                    <div className="absolute -inset-1 gradient-emerald rounded-3xl opacity-10 blur-2xl" />
+
+                    {/* Main card */}
+                    <div className="relative bg-card/95 backdrop-blur-xl rounded-3xl p-5 md:p-8 border border-border/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
+                        {viewMode === 'month' ? (
+                            <ModernCalendar
+                                calendarData={calendarData}
+                                selectedDate={date}
+                                onDateSelect={setDate}
+                                onCheckIn={handleCheckIn}
+                            />
+                        ) : (
+                            <HeatmapCalendar
+                                calendarData={calendarData}
+                                selectedDate={date}
+                                onDateSelect={setDate}
+                                onCheckIn={handleCheckIn}
+                            />
+                        )}
+                    </div>
                 </div>
             </div>
 

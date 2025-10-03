@@ -212,67 +212,82 @@ export default function ProfilePage() {
         : 0
 
     return (
-        <div className="flex flex-col min-h-screen pb-20">
-            <div className="flex-1 p-4 space-y-4">
-                <h1 className="text-2xl font-bold">Profile</h1>
+        <div className="flex flex-col min-h-screen pb-24 bg-gradient-to-br from-background via-background to-primary/5">
+            <div className="flex-1 p-4 md:p-6 max-w-2xl mx-auto w-full space-y-6 animate-scale-in">
+                <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+                    <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
+                        Profile
+                    </span>
+                </h1>
 
-                {/* User Info */}
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-xl">
-                                {user?.name?.[0]?.toUpperCase() || 'U'}
-                            </div>
-                            <div>
-                                <CardTitle>{user?.name}</CardTitle>
-                                <CardDescription>{user?.email}</CardDescription>
-                            </div>
-                        </div>
-                    </CardHeader>
-                </Card>
-
-                {/* Current Weight */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Weight className="h-5 w-5" />
-                            Current Weight
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {latestWeight ? (
-                            <div className="space-y-2">
-                                <div className="text-3xl font-bold">
-                                    {latestWeight.toFixed(1)} kg
-                                </div>
-                                {weightChange !== 0 && (
-                                    <div className={`text-sm ${weightChange > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                                        {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg from last
+                {/* User Info - Enhanced */}
+                <div className="relative">
+                    <div className="absolute -inset-1 gradient-purple rounded-3xl opacity-10 blur-2xl" />
+                    <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
+                        <CardHeader>
+                            <div className="flex items-center gap-4">
+                                <div className="relative">
+                                    <div className="absolute -inset-1 gradient-emerald rounded-full opacity-30 blur" />
+                                    <div className="relative h-16 w-16 rounded-full gradient-emerald flex items-center justify-center text-white font-black text-2xl shadow-lg">
+                                        {user?.name?.[0]?.toUpperCase() || 'U'}
                                     </div>
-                                )}
+                                </div>
+                                <div>
+                                    <CardTitle className="text-xl">{user?.name}</CardTitle>
+                                    <CardDescription className="text-base">{user?.email}</CardDescription>
+                                </div>
                             </div>
-                        ) : (
-                            <p className="text-sm text-muted-foreground">No weight entries yet</p>
-                        )}
+                        </CardHeader>
+                    </Card>
+                </div>
 
-                        <div className="flex gap-2">
-                            <Input
-                                type="number"
-                                placeholder="Weight (kg)"
-                                value={newWeight}
-                                onChange={(e) => setNewWeight(e.target.value)}
-                                className="flex-1"
-                            />
-                            <Button
-                                onClick={addWeighIn}
-                                disabled={isAddingWeight}
-                            >
-                                <Save className="h-4 w-4 mr-1" />
-                                Log
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Current Weight - Enhanced */}
+                <div className="relative">
+                    <div className="absolute -inset-1 gradient-blue rounded-3xl opacity-10 blur-2xl" />
+                    <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
+                        <CardHeader>
+                            <CardTitle className="text-xl font-bold flex items-center gap-2">
+                                <Weight className="h-5 w-5" />
+                                Current Weight
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {latestWeight ? (
+                                <div className="space-y-3">
+                                    <div className="text-4xl font-black bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
+                                        {latestWeight.toFixed(1)} kg
+                                    </div>
+                                    {weightChange !== 0 && (
+                                        <div className={`text-sm font-semibold flex items-center gap-1 ${weightChange > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                            <div className={`h-2 w-2 rounded-full ${weightChange > 0 ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                                            {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg from last
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">No weight entries yet</p>
+                            )}
+
+                            <div className="flex gap-2">
+                                <Input
+                                    type="number"
+                                    placeholder="Enter weight (kg)"
+                                    value={newWeight}
+                                    onChange={(e) => setNewWeight(e.target.value)}
+                                    className="flex-1 bg-background/50 border-border/50"
+                                />
+                                <Button
+                                    onClick={addWeighIn}
+                                    disabled={isAddingWeight}
+                                    className="gradient-blue text-white border-0 hover:opacity-90"
+                                >
+                                    <Save className="h-4 w-4 mr-1.5" />
+                                    Log
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 {/* Target Weight Goal */}
                 <Card>
@@ -398,65 +413,68 @@ export default function ProfilePage() {
                     </CardContent>
                 </Card>
 
-                {/* Theme Settings */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Appearance</CardTitle>
-                        <CardDescription>Choose your preferred theme</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {mounted && (
-                            <div className="grid grid-cols-3 gap-3">
-                                <button
-                                    onClick={() => setTheme('light')}
-                                    className={`
-                                        flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all
-                                        ${theme === 'light'
-                                            ? 'border-primary bg-primary/10'
-                                            : 'border-muted hover:border-muted-foreground/30'
-                                        }
-                                    `}
-                                >
-                                    <Sun className="h-5 w-5" />
-                                    <span className="text-sm font-medium">Light</span>
-                                </button>
+                {/* Theme Settings - Enhanced */}
+                <div className="relative">
+                    <div className="absolute -inset-1 gradient-orange rounded-3xl opacity-10 blur-2xl" />
+                    <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
+                        <CardHeader>
+                            <CardTitle className="text-xl font-bold">Appearance</CardTitle>
+                            <CardDescription>Choose your preferred theme</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {mounted && (
+                                <div className="grid grid-cols-3 gap-3">
+                                    <button
+                                        onClick={() => setTheme('light')}
+                                        className={`
+                                            relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
+                                            ${theme === 'light'
+                                                ? 'border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/20'
+                                                : 'border-border/50 hover:border-border'
+                                            }
+                                        `}
+                                    >
+                                        <Sun className={`h-6 w-6 ${theme === 'light' ? 'text-emerald-600' : ''}`} />
+                                        <span className="text-sm font-semibold">Light</span>
+                                    </button>
 
-                                <button
-                                    onClick={() => setTheme('dark')}
-                                    className={`
-                                        flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all
-                                        ${theme === 'dark'
-                                            ? 'border-primary bg-primary/10'
-                                            : 'border-muted hover:border-muted-foreground/30'
-                                        }
-                                    `}
-                                >
-                                    <Moon className="h-5 w-5" />
-                                    <span className="text-sm font-medium">Dark</span>
-                                </button>
+                                    <button
+                                        onClick={() => setTheme('dark')}
+                                        className={`
+                                            relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
+                                            ${theme === 'dark'
+                                                ? 'border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/20'
+                                                : 'border-border/50 hover:border-border'
+                                            }
+                                        `}
+                                    >
+                                        <Moon className={`h-6 w-6 ${theme === 'dark' ? 'text-emerald-600' : ''}`} />
+                                        <span className="text-sm font-semibold">Dark</span>
+                                    </button>
 
-                                <button
-                                    onClick={() => setTheme('system')}
-                                    className={`
-                                        flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all
-                                        ${theme === 'system'
-                                            ? 'border-primary bg-primary/10'
-                                            : 'border-muted hover:border-muted-foreground/30'
-                                        }
-                                    `}
-                                >
-                                    <Monitor className="h-5 w-5" />
-                                    <span className="text-sm font-medium">System</span>
-                                </button>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                                    <button
+                                        onClick={() => setTheme('system')}
+                                        className={`
+                                            relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all
+                                            ${theme === 'system'
+                                                ? 'border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/20'
+                                                : 'border-border/50 hover:border-border'
+                                            }
+                                        `}
+                                    >
+                                        <Monitor className={`h-6 w-6 ${theme === 'system' ? 'text-emerald-600' : ''}`} />
+                                        <span className="text-sm font-semibold">System</span>
+                                    </button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
 
-                {/* Logout Button */}
+                {/* Logout Button - Enhanced */}
                 <Button
                     variant="destructive"
-                    className="w-full touch-target-lg"
+                    className="w-full touch-target-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 text-white shadow-lg hover:shadow-red-500/30 transition-all"
                     onClick={handleLogout}
                 >
                     <LogOut className="h-4 w-4 mr-2" />

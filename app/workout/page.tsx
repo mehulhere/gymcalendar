@@ -187,81 +187,133 @@ export default function WorkoutPage() {
 
     if (activeSession && sessionData) {
         return (
-            <div className="flex flex-col min-h-screen pb-20">
-                <div className="flex-1 p-4 space-y-4">
-                    <div className="flex justify-between items-center sticky top-0 bg-background z-10 py-2">
-                        <h1 className="text-2xl font-bold">Active Workout</h1>
-                        <Button variant="outline" size="sm" onClick={saveProgress}>
-                            <Save className="h-4 w-4 mr-1" />
+            <div className="flex flex-col min-h-screen pb-24 bg-gradient-to-br from-background via-background to-primary/5">
+                <div className="flex-1 p-4 md:p-6 max-w-4xl mx-auto w-full space-y-4 animate-scale-in">
+                    {/* Header - Sticky */}
+                    <div className="flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-xl z-10 py-3 px-4 -mx-4 rounded-2xl border border-border/50 shadow-lg">
+                        <h1 className="text-2xl md:text-3xl font-black">
+                            <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
+                                Active Workout
+                            </span>
+                        </h1>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={saveProgress}
+                            className="gradient-emerald text-white border-0 hover:opacity-90 transition-opacity"
+                        >
+                            <Save className="h-4 w-4 mr-1.5" />
                             Save
                         </Button>
                     </div>
 
+                    {/* Exercise Cards */}
                     {sessionData.map((exercise: any, exIndex: number) => {
                         const completedSets = exercise.sets.filter((s: any) => s.reps > 0 && s.weight > 0).length
                         const isComplete = completedSets === exercise.sets.length
+                        const progress = (completedSets / exercise.sets.length) * 100
 
                         return (
-                            <Card key={exIndex} className={isComplete ? 'border-emerald-500' : ''}>
-                                <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-lg">
-                                            {exercise.exerciseId?.name || 'Exercise'}
-                                            {isComplete && <Check className="inline ml-2 h-5 w-5 text-emerald-500" />}
-                                        </CardTitle>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => openYouTubeExercise(exercise.exerciseId?.name || '')}
-                                        >
-                                            <Youtube className="h-5 w-5 text-red-500" />
-                                        </Button>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        {completedSets} / {exercise.sets.length} sets
-                                    </p>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    {exercise.sets.map((set: any, setIndex: number) => (
-                                        <div key={setIndex} className="grid grid-cols-3 gap-2 items-center">
-                                            <Label className="text-sm">Set {setIndex + 1}</Label>
-                                            <div>
-                                                <Input
-                                                    type="number"
-                                                    placeholder="Reps"
-                                                    value={set.reps === 0 ? '' : set.reps}
-                                                    onChange={(e) => updateSet(exIndex, setIndex, 'reps', e.target.value)}
-                                                    className="h-10"
-                                                    min="0"
-                                                    step="1"
-                                                />
+                            <div key={exIndex} className="relative group">
+                                {isComplete && (
+                                    <div className="absolute -inset-1 gradient-emerald rounded-3xl opacity-20 blur-lg" />
+                                )}
+                                <Card className={`relative bg-card/95 backdrop-blur-sm border-border/50 transition-all duration-300 ${isComplete ? 'border-emerald-500/50' : ''
+                                    }`}>
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <CardTitle className="text-lg md:text-xl font-bold flex items-center gap-2">
+                                                    {exercise.exerciseId?.name || 'Exercise'}
+                                                    {isComplete && (
+                                                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-semibold">
+                                                            <Check className="h-4 w-4" />
+                                                            Done
+                                                        </div>
+                                                    )}
+                                                </CardTitle>
+                                                <div className="mt-2 space-y-1">
+                                                    <div className="flex items-center justify-between text-sm">
+                                                        <span className="text-muted-foreground">
+                                                            {completedSets} / {exercise.sets.length} sets
+                                                        </span>
+                                                        <span className="font-semibold text-emerald-600">
+                                                            {progress.toFixed(0)}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full gradient-emerald transition-all duration-500"
+                                                            style={{ width: `${progress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <Input
-                                                    type="number"
-                                                    placeholder="Weight"
-                                                    value={set.weight === 0 ? '' : set.weight}
-                                                    onChange={(e) => updateSet(exIndex, setIndex, 'weight', e.target.value)}
-                                                    className="h-10"
-                                                    min="0"
-                                                    step="0.5"
-                                                />
-                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => openYouTubeExercise(exercise.exerciseId?.name || '')}
+                                                className="ml-2 hover:bg-red-500/10 text-red-500"
+                                            >
+                                                <Youtube className="h-5 w-5" />
+                                            </Button>
                                         </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        {exercise.sets.map((set: any, setIndex: number) => {
+                                            const setComplete = set.reps > 0 && set.weight > 0
+                                            return (
+                                                <div
+                                                    key={setIndex}
+                                                    className={`grid grid-cols-[auto_1fr_1fr] gap-3 items-center p-3 rounded-xl transition-all ${setComplete ? 'bg-emerald-500/5 border border-emerald-500/20' : 'bg-muted/30'
+                                                        }`}
+                                                >
+                                                    <Label className="text-sm font-semibold min-w-[4rem]">
+                                                        Set {setIndex + 1}
+                                                    </Label>
+                                                    <div>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="Reps"
+                                                            value={set.reps === 0 ? '' : set.reps}
+                                                            onChange={(e) => updateSet(exIndex, setIndex, 'reps', e.target.value)}
+                                                            className="h-10 bg-background/50 border-border/50"
+                                                            min="0"
+                                                            step="1"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="Weight"
+                                                            value={set.weight === 0 ? '' : set.weight}
+                                                            onChange={(e) => updateSet(exIndex, setIndex, 'weight', e.target.value)}
+                                                            className="h-10 bg-background/50 border-border/50"
+                                                            min="0"
+                                                            step="0.5"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </CardContent>
+                                </Card>
+                            </div>
                         )
                     })}
 
-                    <Button
-                        className="w-full touch-target-lg"
-                        size="lg"
-                        onClick={finishWorkout}
-                    >
-                        <Check className="h-5 w-5 mr-2" />
-                        Finish Workout & Check In
-                    </Button>
+                    {/* Finish Button */}
+                    <div className="relative">
+                        <div className="absolute -inset-1 gradient-emerald rounded-2xl opacity-30 blur-xl" />
+                        <Button
+                            className="relative w-full touch-target-lg gradient-emerald text-white border-0 hover:opacity-90 transition-all duration-300 shadow-lg"
+                            size="lg"
+                            onClick={finishWorkout}
+                        >
+                            <Check className="h-5 w-5 mr-2" />
+                            Finish Workout & Check In
+                        </Button>
+                    </div>
                 </div>
                 <BottomNav />
             </div>
@@ -269,62 +321,77 @@ export default function WorkoutPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen pb-20">
-            <div className="flex-1 p-4 space-y-4">
-                <h1 className="text-2xl font-bold">Start Workout</h1>
+        <div className="flex flex-col min-h-screen pb-24 bg-gradient-to-br from-background via-background to-primary/5">
+            <div className="flex-1 p-4 md:p-6 max-w-2xl mx-auto w-full space-y-6 animate-scale-in">
+                <div className="space-y-2">
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+                        <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
+                            Start Workout
+                        </span>
+                    </h1>
+                    <p className="text-muted-foreground">
+                        Choose your plan and let's get started! 🔥
+                    </p>
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Select Plan</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Workout Plan</Label>
-                            <select
-                                className="w-full p-2 border rounded-md bg-background touch-target"
-                                value={selectedPlan}
-                                onChange={(e) => {
-                                    setSelectedPlan(e.target.value)
-                                    setSelectedDay('')
-                                }}
-                            >
-                                <option value="">Choose a plan...</option>
-                                {plans.map(plan => (
-                                    <option key={plan._id} value={plan._id}>
-                                        {plan.name} {plan.isActive && '(Active)'}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {selectedPlanData && (
-                            <div className="space-y-2">
-                                <Label>Day</Label>
+                <div className="relative">
+                    <div className="absolute -inset-1 gradient-emerald rounded-3xl opacity-5 blur-2xl" />
+                    <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
+                        <CardHeader>
+                            <CardTitle className="text-xl font-bold">Select Plan</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-5">
+                            <div className="space-y-3">
+                                <Label className="text-sm font-semibold text-foreground">Workout Plan</Label>
                                 <select
-                                    className="w-full p-2 border rounded-md bg-background touch-target"
-                                    value={selectedDay}
-                                    onChange={(e) => setSelectedDay(e.target.value)}
+                                    className="w-full p-3 border-2 border-border/50 rounded-xl bg-background/50 backdrop-blur-sm touch-target font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                                    value={selectedPlan}
+                                    onChange={(e) => {
+                                        setSelectedPlan(e.target.value)
+                                        setSelectedDay('')
+                                    }}
                                 >
-                                    <option value="">Choose a day...</option>
-                                    {selectedPlanData.days.map(day => (
-                                        <option key={day._id} value={day._id}>
-                                            {day.name} ({day.exercises.length} exercises)
+                                    <option value="">Choose a plan...</option>
+                                    {plans.map(plan => (
+                                        <option key={plan._id} value={plan._id}>
+                                            {plan.name} {plan.isActive && '✓ Active'}
                                         </option>
                                     ))}
                                 </select>
                             </div>
-                        )}
 
-                        <Button
-                            className="w-full touch-target-lg"
-                            onClick={startWorkout}
-                            disabled={!selectedPlan || !selectedDay || isLoading}
-                        >
-                            <Play className="h-4 w-4 mr-2" />
-                            {isLoading ? 'Starting...' : 'Start Workout'}
-                        </Button>
-                    </CardContent>
-                </Card>
+                            {selectedPlanData && (
+                                <div className="space-y-3 animate-scale-in">
+                                    <Label className="text-sm font-semibold text-foreground">Workout Day</Label>
+                                    <select
+                                        className="w-full p-3 border-2 border-border/50 rounded-xl bg-background/50 backdrop-blur-sm touch-target font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                                        value={selectedDay}
+                                        onChange={(e) => setSelectedDay(e.target.value)}
+                                    >
+                                        <option value="">Choose a day...</option>
+                                        {selectedPlanData.days.map(day => (
+                                            <option key={day._id} value={day._id}>
+                                                {day.name} • {day.exercises.length} exercises
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            <div className="relative pt-2">
+                                <div className="absolute -inset-1 gradient-emerald rounded-2xl opacity-30 blur-xl" />
+                                <Button
+                                    className="relative w-full touch-target-lg gradient-emerald text-white border-0 hover:opacity-90 transition-all duration-300 shadow-lg disabled:opacity-50"
+                                    onClick={startWorkout}
+                                    disabled={!selectedPlan || !selectedDay || isLoading}
+                                >
+                                    <Play className="h-5 w-5 mr-2" />
+                                    {isLoading ? 'Starting...' : 'Start Workout'}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
 
             <BottomNav />

@@ -103,101 +103,143 @@ export default function PlansPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen pb-20">
-            <div className="flex-1 p-4 space-y-4">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">Workout Plans</h1>
-                    <Button className="touch-target" onClick={() => router.push('/plans/new')}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Plan
-                    </Button>
+        <div className="flex flex-col min-h-screen pb-24 bg-gradient-to-br from-background via-background to-primary/5">
+            <div className="flex-1 p-4 md:p-6 max-w-4xl mx-auto w-full space-y-6 animate-scale-in">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+                            <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
+                                Workout Plans
+                            </span>
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Manage your training programs
+                        </p>
+                    </div>
+                    <div className="relative">
+                        <div className="absolute -inset-1 gradient-emerald rounded-xl opacity-30 blur" />
+                        <Button
+                            className="relative gradient-emerald text-white border-0 hover:opacity-90 transition-opacity touch-target"
+                            onClick={() => router.push('/plans/new')}
+                        >
+                            <Plus className="h-4 w-4 mr-1.5" />
+                            New Plan
+                        </Button>
+                    </div>
                 </div>
 
                 {isLoading ? (
-                    <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                            Loading plans...
-                        </CardContent>
-                    </Card>
+                    <div className="relative">
+                        <Card className="bg-card/95 backdrop-blur-sm border-border/50">
+                            <CardContent className="py-12 text-center text-muted-foreground">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                    <p>Loading plans...</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
                 ) : plans.length === 0 ? (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>No Plans Yet</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Create your first workout plan to get started
-                            </p>
-                            <Button
-                                className="w-full touch-target-lg"
-                                onClick={() => router.push('/plans/new')}
-                            >
-                                Create Your First Plan
-                            </Button>
-                        </CardContent>
-                    </Card>
+                    <div className="relative">
+                        <div className="absolute -inset-1 gradient-emerald rounded-3xl opacity-5 blur-2xl" />
+                        <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
+                            <CardHeader className="text-center pb-4">
+                                <CardTitle className="text-2xl">No Plans Yet</CardTitle>
+                                <CardDescription>Start building your fitness journey today</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-muted-foreground text-center mb-6">
+                                    Create your first workout plan to get started on your fitness goals 💪
+                                </p>
+                                <div className="relative">
+                                    <div className="absolute -inset-1 gradient-emerald rounded-2xl opacity-30 blur-xl" />
+                                    <Button
+                                        className="relative w-full touch-target-lg gradient-emerald text-white border-0 hover:opacity-90 transition-opacity"
+                                        onClick={() => router.push('/plans/new')}
+                                    >
+                                        <Plus className="h-5 w-5 mr-2" />
+                                        Create Your First Plan
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
                 ) : (
                     <div className="space-y-4">
                         {plans.map((plan) => (
-                            <Card key={plan._id} className={plan.isActive ? 'border-emerald-500' : ''}>
-                                <CardHeader>
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <CardTitle className="flex items-center gap-2">
-                                                {plan.name}
-                                                {plan.isActive && (
-                                                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                                                )}
-                                            </CardTitle>
-                                            <CardDescription>
-                                                {plan.days.length} day{plan.days.length !== 1 ? 's' : ''} •{' '}
-                                                {plan.days.reduce((sum, day) => sum + day.exercises.length, 0)} exercises
-                                            </CardDescription>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-2">
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                        {plan.days.map((day) => (
-                                            <div
-                                                key={day._id}
-                                                className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-xs"
-                                            >
-                                                {day.name}
+                            <div key={plan._id} className="relative group">
+                                {plan.isActive && (
+                                    <div className="absolute -inset-1 gradient-emerald rounded-3xl opacity-20 blur-lg" />
+                                )}
+                                <Card className={`relative bg-card/95 backdrop-blur-sm transition-all duration-300 ${plan.isActive ? 'border-emerald-500/50 shadow-lg shadow-emerald-500/10' : 'border-border/50 hover:border-border'
+                                    }`}>
+                                    <CardHeader>
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <CardTitle className="text-xl font-bold flex items-center gap-2">
+                                                    {plan.name}
+                                                    {plan.isActive && (
+                                                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600">
+                                                            <CheckCircle2 className="h-4 w-4" />
+                                                            <span className="text-xs font-semibold">Active</span>
+                                                        </div>
+                                                    )}
+                                                </CardTitle>
+                                                <CardDescription className="mt-1">
+                                                    {plan.days.length} {plan.days.length === 1 ? 'day' : 'days'} •{' '}
+                                                    {plan.days.reduce((sum, day) => sum + day.exercises.length, 0)} exercises
+                                                </CardDescription>
                                             </div>
-                                        ))}
-                                    </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {/* Days */}
+                                        <div className="flex flex-wrap gap-2">
+                                            {plan.days.map((day) => (
+                                                <div
+                                                    key={day._id}
+                                                    className="px-3 py-1.5 bg-muted/50 backdrop-blur-sm text-foreground rounded-lg text-xs font-medium border border-border/50"
+                                                >
+                                                    {day.name}
+                                                </div>
+                                            ))}
+                                        </div>
 
-                                    <div className="flex gap-2">
-                                        {!plan.isActive && (
+                                        {/* Actions */}
+                                        <div className="flex gap-2">
+                                            {!plan.isActive && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1 border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10"
+                                                    onClick={() => activatePlan(plan._id)}
+                                                >
+                                                    <Play className="h-4 w-4 mr-1.5" />
+                                                    Activate
+                                                </Button>
+                                            )}
                                             <Button
                                                 variant="outline"
                                                 size="sm"
                                                 className="flex-1"
-                                                onClick={() => activatePlan(plan._id)}
+                                                onClick={() => router.push(`/plans/${plan._id}`)}
                                             >
-                                                <Play className="h-4 w-4 mr-1" />
-                                                Activate
+                                                <Edit className="h-4 w-4 mr-1.5" />
+                                                Edit
                                             </Button>
-                                        )}
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => router.push(`/plans/${plan._id}`)}
-                                        >
-                                            <Edit className="h-4 w-4 mr-1" />
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => deletePlan(plan._id)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-red-500 hover:bg-red-500/10 border-red-500/50"
+                                                onClick={() => deletePlan(plan._id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
                         ))}
                     </div>
                 )}

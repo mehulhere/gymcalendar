@@ -152,67 +152,85 @@ export default function StatsPage() {
         .slice(0, 5)
 
     return (
-        <div className="flex flex-col min-h-screen pb-20">
-            <div className="flex-1 p-4 space-y-4">
-                <h1 className="text-2xl font-bold">Statistics</h1>
+        <div className="flex flex-col min-h-screen pb-24 bg-gradient-to-br from-background via-background to-primary/5">
+            <div className="flex-1 p-4 md:p-6 max-w-6xl mx-auto w-full space-y-6 animate-scale-in">
+                <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+                    <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500 bg-clip-text text-transparent">
+                        Your Stats
+                    </span>
+                </h1>
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Summary Cards - Enhanced */}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                     {userSettings?.targetWeight && (
-                        <Card>
+                        <div className="relative group">
+                            <div className="absolute -inset-0.5 gradient-purple rounded-2xl opacity-30 blur group-hover:opacity-50 transition duration-300" />
+                            <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                        <Target className="h-4 w-4" />
+                                        Target Weight
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-purple-500 to-purple-600 bg-clip-text text-transparent">
+                                        {userSettings.targetWeight} kg
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {userSettings.targetDays} days goal
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+                    <div className="relative group">
+                        <div className="absolute -inset-0.5 gradient-emerald rounded-2xl opacity-30 blur group-hover:opacity-50 transition duration-300" />
+                        <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                                    <Target className="h-4 w-4" />
-                                    Target Weight
+                                <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                    <Dumbbell className="h-4 w-4" />
+                                    Weekly Volume
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">{userSettings.targetWeight} kg</div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    {userSettings.targetDays} days goal
-                                </p>
+                                <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
+                                    {formatVolume(volumeData.weeklyVolume)} kg
+                                </div>
                             </CardContent>
                         </Card>
-                    )}
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
-                                Weekly Volume
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold flex items-center gap-2">
-                                <Dumbbell className="h-5 w-5 text-emerald-500" />
-                                {formatVolume(volumeData.weeklyVolume)} kg
-                            </div>
-                        </CardContent>
-                    </Card>
+                    </div>
 
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
-                                Workouts
-                            </CardTitle>
+                    <div className="relative group">
+                        <div className="absolute -inset-0.5 gradient-blue rounded-2xl opacity-30 blur group-hover:opacity-50 transition duration-300" />
+                        <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                    <Activity className="h-4 w-4" />
+                                    Workouts
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
+                                    {volumeData.workoutCount}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+
+                {/* Muscle Heatmap - Enhanced */}
+                <div className="relative">
+                    <div className="absolute -inset-1 gradient-emerald rounded-3xl opacity-5 blur-2xl" />
+                    <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
+                        <CardHeader>
+                            <CardTitle className="text-xl md:text-2xl font-bold">Muscle Volume Distribution</CardTitle>
+                            <CardDescription>Weekly training volume by muscle group</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold flex items-center gap-2">
-                                <Activity className="h-5 w-5 text-blue-500" />
-                                {volumeData.workoutCount}
-                            </div>
+                            <MuscleHeatmap muscleVolumes={volumeData.muscleVolumes} muscleSets={volumeData.muscleSets} />
                         </CardContent>
                     </Card>
                 </div>
-
-                {/* Muscle Heatmap */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Muscle Volume Distribution</CardTitle>
-                        <CardDescription>Weekly training volume by muscle group</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <MuscleHeatmap muscleVolumes={volumeData.muscleVolumes} muscleSets={volumeData.muscleSets} />
-                    </CardContent>
-                </Card>
 
                 {/* Top Trained Muscles */}
                 <Card>

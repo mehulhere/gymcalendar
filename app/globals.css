@@ -69,6 +69,99 @@
     .touch-target-lg {
         @apply min-h-[48px] min-w-[48px];
     }
+
+    /* Gradient backgrounds */
+    .gradient-emerald {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .gradient-blue {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .gradient-purple {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+
+    .gradient-orange {
+        background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    }
+
+    .gradient-pink {
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    }
+
+    /* Glassmorphism */
+    .glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-light {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    /* Smooth transitions */
+    .transition-all-smooth {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Custom animations */
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .animate-float {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+
+    .animate-shimmer {
+        animation: shimmer 3s linear infinite;
+        background: linear-gradient(to right,
+                transparent 0%,
+                rgba(255, 255, 255, 0.1) 50%,
+                transparent 100%);
+        background-size: 1000px 100%;
+    }
+
+    @keyframes scale-in {
+        0% {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .animate-scale-in {
+        animation: scale-in 0.3s ease-out;
+    }
 }
 
 /* PWA specific styles */
@@ -83,4 +176,3 @@
 .bottom-nav {
     padding-bottom: env(safe-area-inset-bottom);
 }
-
