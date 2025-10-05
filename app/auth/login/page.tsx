@@ -15,10 +15,10 @@ export default function LoginPage() {
     const router = useRouter()
     const { toast } = useToast()
     const login = useAuthStore((state) => state.login)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -58,9 +58,10 @@ export default function LoginPage() {
         setIsGoogleLoading(true)
         try {
             // Redirect to Google OAuth
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
             const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
                 `client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&` +
-                `redirect_uri=${encodeURIComponent(`${window.location.origin}/api/auth/google`)}&` +
+                `redirect_uri=${encodeURIComponent(`${baseUrl}/api/auth/google`)}&` +
                 `response_type=code&` +
                 `scope=openid%20email%20profile&` +
                 `access_type=offline`
