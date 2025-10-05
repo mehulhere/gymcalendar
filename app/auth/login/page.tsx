@@ -20,6 +20,8 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
+    console.log(process.env.NEXT_PUBLIC_APP_URL)
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
@@ -58,7 +60,7 @@ export default function LoginPage() {
         setIsGoogleLoading(true)
         try {
             // Redirect to Google OAuth
-            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL
             const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
                 `client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&` +
                 `redirect_uri=${encodeURIComponent(`${baseUrl}/api/auth/google`)}&` +
