@@ -13,6 +13,7 @@ import { Play, Check, Youtube, Shuffle, ChevronLeft, Sparkles } from 'lucide-rea
 import { WorkoutMascot } from '@/components/workout/workout-mascot'
 import { openYouTubeExercise } from '@/lib/youtube'
 
+interface ExerciseRef { _id: string; name: string }
 interface Plan {
     _id: string
     name: string
@@ -21,10 +22,11 @@ interface Plan {
         _id: string
         name: string
         exercises: Array<{
-            exerciseId: { _id: string; name: string }
+            exerciseId: ExerciseRef
             sets: number
             defaultReps: number
             targetWeight?: number
+            alternates?: ExerciseRef[]
         }>
     }>
 }
@@ -206,6 +208,35 @@ export default function WorkoutPage() {
         setSessionData(null)
     }
 
+    // Ask backend to switch to next alternate; if none or pressed repeatedly, backend auto-finds by muscles
+    const switchToAlternate = async (exerciseIndex: number) => {
+        try {
+            if (!activeSession) return
+            const res = await fetch(`/api/sessions/${activeSession._id}/alternate`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${useAuthStore.getState().accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ exerciseIndex }),
+            })
+            if (!res.ok) {
+                const msg = await res.json().catch(() => ({}))
+                toast({ title: 'Alternate error', description: msg.error || 'Unable to switch exercise', variant: 'destructive' })
+                return
+            }
+            const data = await res.json()
+            const updated = data.exercise
+            const newData = [...sessionData]
+            newData[exerciseIndex] = { ...newData[exerciseIndex], exerciseId: updated.exerciseId }
+            setSessionData(newData)
+            toast({ title: 'Alternate loaded', description: `Now: ${updated.exerciseId?.name || 'Exercise'}` })
+        } catch (e) {
+            console.error('Alternate switch failed', e)
+            toast({ title: 'Error', description: 'Failed to load alternate', variant: 'destructive' })
+        }
+    }
+
     const selectedPlanData = plans.find(p => p._id === selectedPlan)
 
     if (activeSession && sessionData) {
@@ -283,7 +314,7 @@ export default function WorkoutPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => { /* Implement shuffle logic later */ }}
+                                                onClick={() => switchToAlternate(exIndex)}
                                                 className="ml-1 hover:bg-blue-500/10 text-blue-500"
                                             >
                                                 <Shuffle className="h-5 w-5" />

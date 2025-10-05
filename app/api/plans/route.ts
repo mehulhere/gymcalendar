@@ -46,6 +46,7 @@ async function getPlans(req: AuthenticatedRequest) {
 
     const plans = await Plan.find({ userId: req.user!.userId })
       .populate('days.exercises.exerciseId', 'name equipment primary_muscles')
+      .populate('days.exercises.alternates', 'name equipment primary_muscles')
       .sort({ isActive: -1, updatedAt: -1 })
       .lean()
 
@@ -124,4 +125,3 @@ async function createPlan(req: AuthenticatedRequest) {
 
 export const GET = withAuth(getPlans)
 export const POST = withAuth(createPlan)
-

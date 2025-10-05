@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useMemo, useState } from 'react'
@@ -78,6 +79,9 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
     // Swipe detection - minimum swipe distance (in px)
     const minSwipeDistance = 50
 
+    const outlineColor = '#0f172a'
+    const outlineWidth = 2
+
     const onTouchStart = (e: React.TouchEvent) => {
         setTouchEnd(null)
         setTouchStart(e.targetTouches[0].clientX)
@@ -125,14 +129,19 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                             className="w-44 h-auto"
                         >
                             {/* Head */}
-                            <ellipse cx="100" cy="30" rx="22" ry="28" fill="#475569" stroke="#334155" strokeWidth="2" />
+                            <ellipse cx="100" cy="30" rx="22" ry="28" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
+
+                            {/* Eyes */}
+                            <circle cx="92" cy="26" r="3" fill="#FFFFFF" />
+                            <circle cx="108" cy="26" r="3" fill="#FFFFFF" />
+
 
                             {/* Neck */}
                             <path
-                                d="M 88 55 L 85 75 L 115 75 L 112 55 Z"
+                                d="M 84 55 L 80 78 L 120 78 L 116 55 Z"
                                 fill={getColor('neck')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('neck')}
                                 onMouseEnter={() => setHoveredMuscle('Neck')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -141,20 +150,20 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Shoulders - Anterior Deltoids */}
                             <ellipse
-                                cx="65" cy="85" rx="20" ry="18"
+                                cx="52" cy="88" rx="30" ry="22"
                                 fill={getColor('anterior deltoids')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('anterior deltoids')}
                                 onMouseEnter={() => setHoveredMuscle('Shoulders')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <ellipse
-                                cx="135" cy="85" rx="20" ry="18"
+                                cx="148" cy="88" rx="30" ry="22"
                                 fill={getColor('anterior deltoids')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('anterior deltoids')}
                                 onMouseEnter={() => setHoveredMuscle('Shoulders')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -165,10 +174,10 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                             <g>
                                 {/* Upper Chest */}
                                 <path
-                                    d="M 82 78 Q 100 75 118 78 L 115 95 Q 100 92 85 95 Z"
+                                    d="M 65 76 Q 100 68 135 76 L 128 98 Q 100 90 72 98 Z"
                                     fill={getColor('chest')}
-                                    stroke="#1e293b"
-                                    strokeWidth="1"
+                                    stroke={outlineColor}
+                                    strokeWidth={outlineWidth}
                                     onClick={() => handleMuscleClick('chest')}
                                     onMouseEnter={() => setHoveredMuscle('Upper Chest')}
                                     onMouseLeave={() => setHoveredMuscle(null)}
@@ -176,10 +185,10 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                                 />
                                 {/* Mid Chest */}
                                 <path
-                                    d="M 85 95 Q 100 92 115 95 L 115 115 Q 100 110 85 115 Z"
+                                    d="M 72 98 Q 100 90 128 98 L 128 120 Q 100 112 72 120 Z"
                                     fill={getColor('chest')}
-                                    stroke="#1e293b"
-                                    strokeWidth="1"
+                                    stroke={outlineColor}
+                                    strokeWidth={outlineWidth}
                                     onClick={() => handleMuscleClick('chest')}
                                     onMouseEnter={() => setHoveredMuscle('Mid Chest')}
                                     onMouseLeave={() => setHoveredMuscle(null)}
@@ -187,10 +196,10 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                                 />
                                 {/* Lower Chest */}
                                 <path
-                                    d="M 85 115 Q 100 110 115 115 L 108 130 Q 100 128 92 130 Z"
+                                    d="M 72 120 Q 100 112 128 120 L 120 140 Q 100 132 80 140 Z"
                                     fill={getColor('chest')}
-                                    stroke="#1e293b"
-                                    strokeWidth="1"
+                                    stroke={outlineColor}
+                                    strokeWidth={outlineWidth}
                                     onClick={() => handleMuscleClick('chest')}
                                     onMouseEnter={() => setHoveredMuscle('Lower Chest')}
                                     onMouseLeave={() => setHoveredMuscle(null)}
@@ -198,56 +207,60 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                                 />
                             </g>
 
-                            {/* Biceps */}
-                            <ellipse
-                                cx="55" cy="115" rx="11" ry="28"
-                                fill={getColor('biceps')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
-                                onClick={() => handleMuscleClick('biceps')}
-                                onMouseEnter={() => setHoveredMuscle('Biceps')}
+                            {/* Forearms (drawn first so biceps overlap the seam) */}
+                            <path
+                                d="M 40 160 Q 20 170 25 220 L 55 220 Q 60 190 50 160 Z"
+                                fill={getColor('forearms')}
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
+                                onClick={() => handleMuscleClick('forearms')}
+                                onMouseEnter={() => setHoveredMuscle('Forearms')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
-                            <ellipse
-                                cx="145" cy="115" rx="11" ry="28"
-                                fill={getColor('biceps')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
-                                onClick={() => handleMuscleClick('biceps')}
-                                onMouseEnter={() => setHoveredMuscle('Biceps')}
+                            <path
+                                d="M 160 160 Q 180 170 175 220 L 145 220 Q 140 190 150 160 Z"
+                                fill={getColor('forearms')}
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
+                                onClick={() => handleMuscleClick('forearms')}
+                                onMouseEnter={() => setHoveredMuscle('Forearms')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
 
-                            {/* Forearms */}
-                            <path
-                                d="M 49 140 L 46 180 L 54 180 L 57 140 Z"
-                                fill={getColor('forearms')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
-                                onClick={() => handleMuscleClick('forearms')}
-                                onMouseEnter={() => setHoveredMuscle('Forearms')}
+                            {/* Hands (Front View) */}
+                            <ellipse cx="42" cy="227" rx="10" ry="8" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
+                            <ellipse cx="158" cy="227" rx="10" ry="8" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
+
+                            {/* Biceps (drawn after forearms to cover joint) */}
+                            <ellipse
+                                cx="45" cy="128" rx="17" ry="34"
+                                fill={getColor('biceps')}
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
+                                onClick={() => handleMuscleClick('biceps')}
+                                onMouseEnter={() => setHoveredMuscle('Biceps')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
-                            <path
-                                d="M 143 140 L 146 180 L 154 180 L 151 140 Z"
-                                fill={getColor('forearms')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
-                                onClick={() => handleMuscleClick('forearms')}
-                                onMouseEnter={() => setHoveredMuscle('Forearms')}
+                            <ellipse
+                                cx="155" cy="128" rx="17" ry="34"
+                                fill={getColor('biceps')}
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
+                                onClick={() => handleMuscleClick('biceps')}
+                                onMouseEnter={() => setHoveredMuscle('Biceps')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
 
                             {/* Abs */}
                             <rect
-                                x="85" y="135" width="30" height="45" rx="8"
+                                x="82" y="135" width="36" height="52" rx="10"
                                 fill={getColor('abs')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('abs')}
                                 onMouseEnter={() => setHoveredMuscle('Abs')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -256,20 +269,20 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Obliques */}
                             <path
-                                d="M 75 140 Q 70 155 72 170 L 80 165 L 82 145 Z"
+                                d="M 70 142 Q 58 172 68 202 L 86 192 L 92 150 Z"
                                 fill={getColor('obliques')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('obliques')}
                                 onMouseEnter={() => setHoveredMuscle('Obliques')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <path
-                                d="M 125 140 Q 130 155 128 170 L 120 165 L 118 145 Z"
+                                d="M 130 142 Q 142 172 132 202 L 114 192 L 108 150 Z"
                                 fill={getColor('obliques')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('obliques')}
                                 onMouseEnter={() => setHoveredMuscle('Obliques')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -278,10 +291,10 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Hip/Adductors */}
                             <ellipse
-                                cx="100" cy="195" rx="18" ry="15"
+                                cx="100" cy="198" rx="22" ry="18"
                                 fill={getColor('adductors')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('adductors')}
                                 onMouseEnter={() => setHoveredMuscle('Hip Flexors')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -290,20 +303,20 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Quads */}
                             <path
-                                d="M 75 210 L 70 300 L 80 302 L 88 210 Z"
+                                d="M 66 210 L 52 335 L 84 340 L 96 210 Z"
                                 fill={getColor('quads')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('quads')}
                                 onMouseEnter={() => setHoveredMuscle('Quads')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <path
-                                d="M 112 210 L 120 302 L 130 300 L 125 210 Z"
+                                d="M 134 210 L 148 335 L 116 340 L 104 210 Z"
                                 fill={getColor('quads')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('quads')}
                                 onMouseEnter={() => setHoveredMuscle('Quads')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -312,20 +325,20 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Calves */}
                             <ellipse
-                                cx="75" cy="360" rx="12" ry="45"
+                                cx="70" cy="362" rx="14" ry="50"
                                 fill={getColor('calves')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('calves')}
                                 onMouseEnter={() => setHoveredMuscle('Calves')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <ellipse
-                                cx="125" cy="360" rx="12" ry="45"
+                                cx="130" cy="362" rx="14" ry="50"
                                 fill={getColor('calves')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('calves')}
                                 onMouseEnter={() => setHoveredMuscle('Calves')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -333,8 +346,8 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                             />
 
                             {/* Feet */}
-                            <ellipse cx="75" cy="415" rx="10" ry="8" fill="#475569" stroke="#334155" strokeWidth="1" />
-                            <ellipse cx="125" cy="415" rx="10" ry="8" fill="#475569" stroke="#334155" strokeWidth="1" />
+                            <ellipse cx="70" cy="415" rx="10" ry="8" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
+                            <ellipse cx="130" cy="415" rx="10" ry="8" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
                         </svg>
                     </div>
 
@@ -347,14 +360,14 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                             className="w-44 h-auto"
                         >
                             {/* Head */}
-                            <ellipse cx="100" cy="30" rx="22" ry="28" fill="#475569" stroke="#334155" strokeWidth="2" />
+                            <ellipse cx="100" cy="30" rx="22" ry="28" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
 
                             {/* Neck (back) */}
                             <rect
-                                x="88" y="55" width="24" height="20" rx="4"
+                                x="86" y="55" width="28" height="24" rx="6"
                                 fill={getColor('neck')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('neck')}
                                 onMouseEnter={() => setHoveredMuscle('Neck')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -363,20 +376,20 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Traps */}
                             <path
-                                d="M 85 70 L 70 80 L 75 100 L 90 95 Z"
+                                d="M 82 68 L 58 86 L 70 112 L 94 100 Z"
                                 fill={getColor('traps')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('traps')}
                                 onMouseEnter={() => setHoveredMuscle('Traps')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <path
-                                d="M 115 70 L 130 80 L 125 100 L 110 95 Z"
+                                d="M 118 68 L 142 86 L 130 112 L 106 100 Z"
                                 fill={getColor('traps')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('traps')}
                                 onMouseEnter={() => setHoveredMuscle('Traps')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -385,20 +398,20 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Posterior Deltoids */}
                             <ellipse
-                                cx="65" cy="85" rx="20" ry="18"
+                                cx="52" cy="92" rx="30" ry="22"
                                 fill={getColor('posterior deltoids')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('posterior deltoids')}
                                 onMouseEnter={() => setHoveredMuscle('Rear Delts')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <ellipse
-                                cx="135" cy="85" rx="20" ry="18"
+                                cx="148" cy="92" rx="30" ry="22"
                                 fill={getColor('posterior deltoids')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('posterior deltoids')}
                                 onMouseEnter={() => setHoveredMuscle('Rear Delts')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -407,20 +420,20 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Lats */}
                             <path
-                                d="M 78 100 L 60 115 L 68 155 L 85 145 Z"
+                                d="M 78 104 L 52 128 L 66 170 L 92 150 Z"
                                 fill={getColor('lats')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('lats')}
                                 onMouseEnter={() => setHoveredMuscle('Lats')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <path
-                                d="M 122 100 L 140 115 L 132 155 L 115 145 Z"
+                                d="M 122 104 L 148 128 L 134 170 L 108 150 Z"
                                 fill={getColor('lats')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('lats')}
                                 onMouseEnter={() => setHoveredMuscle('Lats')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -429,96 +442,100 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Upper/Mid/Lower Back */}
                             <rect
-                                x="85" y="95" width="30" height="25" rx="4"
+                                x="80" y="95" width="40" height="28" rx="6"
                                 fill={getColor('upper back')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('upper back')}
                                 onMouseEnter={() => setHoveredMuscle('Upper Back')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <rect
-                                x="85" y="120" width="30" height="25" rx="4"
+                                x="80" y="123" width="40" height="28" rx="6"
                                 fill={getColor('mid back')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('mid back')}
                                 onMouseEnter={() => setHoveredMuscle('Mid Back')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <rect
-                                x="88" y="145" width="24" height="30" rx="6"
+                                x="82" y="148" width="36" height="34" rx="8"
                                 fill={getColor('lower back')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('lower back')}
                                 onMouseEnter={() => setHoveredMuscle('Lower Back')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
 
-                            {/* Triceps */}
-                            <ellipse
-                                cx="55" cy="115" rx="11" ry="28"
-                                fill={getColor('triceps')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
-                                onClick={() => handleMuscleClick('triceps')}
-                                onMouseEnter={() => setHoveredMuscle('Triceps')}
+                            {/* Forearms (back) first so triceps cover the joint) */}
+                            <path
+                                d="M 40 160 Q 20 170 25 222 L 55 222 Q 60 190 50 160 Z"
+                                fill={getColor('forearms')}
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
+                                onClick={() => handleMuscleClick('forearms')}
+                                onMouseEnter={() => setHoveredMuscle('Forearms')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
-                            <ellipse
-                                cx="145" cy="115" rx="11" ry="28"
-                                fill={getColor('triceps')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
-                                onClick={() => handleMuscleClick('triceps')}
-                                onMouseEnter={() => setHoveredMuscle('Triceps')}
+                            <path
+                                d="M 160 160 Q 180 170 175 222 L 145 222 Q 140 190 150 160 Z"
+                                fill={getColor('forearms')}
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
+                                onClick={() => handleMuscleClick('forearms')}
+                                onMouseEnter={() => setHoveredMuscle('Forearms')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
 
-                            {/* Forearms (back) */}
-                            <path
-                                d="M 49 140 L 46 180 L 54 180 L 57 140 Z"
-                                fill={getColor('forearms')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
-                                onClick={() => handleMuscleClick('forearms')}
-                                onMouseEnter={() => setHoveredMuscle('Forearms')}
+                            {/* Hands (Back View) */}
+                            <ellipse cx="42" cy="229" rx="10" ry="8" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
+                            <ellipse cx="158" cy="229" rx="10" ry="8" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
+
+                            {/* Triceps (drawn after to overlap seam) */}
+                            <ellipse
+                                cx="45" cy="130" rx="17" ry="34"
+                                fill={getColor('triceps')}
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
+                                onClick={() => handleMuscleClick('triceps')}
+                                onMouseEnter={() => setHoveredMuscle('Triceps')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
-                            <path
-                                d="M 143 140 L 146 180 L 154 180 L 151 140 Z"
-                                fill={getColor('forearms')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
-                                onClick={() => handleMuscleClick('forearms')}
-                                onMouseEnter={() => setHoveredMuscle('Forearms')}
+                            <ellipse
+                                cx="155" cy="130" rx="17" ry="34"
+                                fill={getColor('triceps')}
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
+                                onClick={() => handleMuscleClick('triceps')}
+                                onMouseEnter={() => setHoveredMuscle('Triceps')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
 
                             {/* Glutes */}
                             <ellipse
-                                cx="87" cy="185" rx="16" ry="20"
+                                cx="88" cy="190" rx="20" ry="24"
                                 fill={getColor('glutes')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('glutes')}
                                 onMouseEnter={() => setHoveredMuscle('Glutes')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <ellipse
-                                cx="113" cy="185" rx="16" ry="20"
+                                cx="112" cy="190" rx="20" ry="24"
                                 fill={getColor('glutes')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('glutes')}
                                 onMouseEnter={() => setHoveredMuscle('Glutes')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -527,20 +544,20 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Hamstrings */}
                             <path
-                                d="M 75 210 L 70 300 L 80 302 L 88 210 Z"
+                                d="M 66 212 L 50 338 L 84 344 L 98 212 Z"
                                 fill={getColor('hamstrings')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('hamstrings')}
                                 onMouseEnter={() => setHoveredMuscle('Hamstrings')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <path
-                                d="M 112 210 L 120 302 L 130 300 L 125 210 Z"
+                                d="M 134 212 L 150 338 L 116 344 L 102 212 Z"
                                 fill={getColor('hamstrings')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('hamstrings')}
                                 onMouseEnter={() => setHoveredMuscle('Hamstrings')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -549,20 +566,20 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
 
                             {/* Calves (back) */}
                             <ellipse
-                                cx="75" cy="360" rx="12" ry="45"
+                                cx="70" cy="362" rx="14" ry="50"
                                 fill={getColor('calves')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('calves')}
                                 onMouseEnter={() => setHoveredMuscle('Calves')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
                                 className="cursor-pointer hover:opacity-80 transition-opacity"
                             />
                             <ellipse
-                                cx="125" cy="360" rx="12" ry="45"
+                                cx="130" cy="362" rx="14" ry="50"
                                 fill={getColor('calves')}
-                                stroke="#1e293b"
-                                strokeWidth="1"
+                                stroke={outlineColor}
+                                strokeWidth={outlineWidth}
                                 onClick={() => handleMuscleClick('calves')}
                                 onMouseEnter={() => setHoveredMuscle('Calves')}
                                 onMouseLeave={() => setHoveredMuscle(null)}
@@ -570,8 +587,8 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                             />
 
                             {/* Feet */}
-                            <ellipse cx="75" cy="415" rx="10" ry="8" fill="#475569" stroke="#334155" strokeWidth="1" />
-                            <ellipse cx="125" cy="415" rx="10" ry="8" fill="#475569" stroke="#334155" strokeWidth="1" />
+                            <ellipse cx="70" cy="415" rx="10" ry="8" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
+                            <ellipse cx="130" cy="415" rx="10" ry="8" fill="#475569" stroke={outlineColor} strokeWidth={outlineWidth} />
                         </svg>
                     </div>
                 </div>
@@ -592,6 +609,7 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                     />
                 </div>
             </div>
+
 
             {/* Hovered Muscle Display */}
             {hoveredMuscle && (

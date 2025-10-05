@@ -1,3 +1,4 @@
+
 'use client'
 
 export function WorkoutMascot() {
@@ -180,7 +181,7 @@ export function WorkoutMascot() {
                     left: 50%;
                     transform: translateX(-50%);
                     width: 22px;
-                    height: 60px;
+                    height: 50px;
                     border: 3px solid rgba(16, 185, 129, 0.9);
                     border-radius: 30% 30% 25% 25%;
                     background: transparent;
