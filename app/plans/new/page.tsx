@@ -9,12 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
 import { ExerciseSearch } from '@/components/plans/exercise-search'
-import { Plus, Trash2, GripVertical } from 'lucide-react'
+import { Plus, Trash2, GripVertical, ChevronLeft } from 'lucide-react'
 
 interface Exercise {
     exerciseId: string
     exerciseName: string
     sets: number
+    alternates?: string[] // Array of alternate exercise IDs
 }
 
 interface PlanDay {
@@ -35,6 +36,9 @@ export default function NewPlanPage() {
         { name: 'Day 1', exercises: [] }
     ])
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [swipedExercise, setSwipedExercise] = useState<string | null>(null)
+    const [showAlternateSearch, setShowAlternateSearch] = useState<{ dayIndex: number, exerciseIndex: number } | null>(null)
+    const [touchStart, setTouchStart] = useState<{ x: number, y: number } | null>(null)
 
     const addDay = () => {
         setDays([...days, { name: `Day ${days.length + 1}`, exercises: [] }])
@@ -76,6 +80,52 @@ export default function NewPlanPage() {
         const newDays = [...days]
         newDays[dayIndex].exercises[exerciseIndex][field as keyof Exercise] = value as never
         setDays(newDays)
+    }
+
+    const addAlternate = (dayIndex: number, exerciseIndex: number, alternateExercise: any) => {
+        const newDays = [...days]
+        const exercise = newDays[dayIndex].exercises[exerciseIndex]
+        if (!exercise.alternates) {
+            exercise.alternates = []
+        }
+        exercise.alternates.push(alternateExercise._id)
+        setDays(newDays)
+        setShowAlternateSearch(null)
+    }
+
+    const removeAlternate = (dayIndex: number, exerciseIndex: number, alternateId: string) => {
+        const newDays = [...days]
+        const exercise = newDays[dayIndex].exercises[exerciseIndex]
+        if (exercise.alternates) {
+            exercise.alternates = exercise.alternates.filter(id => id !== alternateId)
+        }
+        setDays(newDays)
+    }
+
+    const handleTouchStart = (e: React.TouchEvent, exerciseKey: string) => {
+        const touch = e.touches[0]
+        setTouchStart({ x: touch.clientX, y: touch.clientY })
+    }
+
+    const handleTouchMove = (e: React.TouchEvent, exerciseKey: string) => {
+        if (!touchStart) return
+
+        const touch = e.touches[0]
+        const deltaX = touch.clientX - touchStart.x
+        const deltaY = Math.abs(touch.clientY - touchStart.y)
+
+        // Only trigger swipe if horizontal movement is greater than vertical
+        if (Math.abs(deltaX) > 50 && deltaY < 100) {
+            if (deltaX < -30) {
+                setSwipedExercise(exerciseKey)
+            } else if (deltaX > 30) {
+                setSwipedExercise(null)
+            }
+        }
+    }
+
+    const handleTouchEnd = () => {
+        setTouchStart(null)
     }
 
     const handleSubmit = async () => {
@@ -141,6 +191,7 @@ export default function NewPlanPage() {
                         exercises: day.exercises.map(ex => ({
                             exerciseId: ex.exerciseId,
                             sets: ex.sets,
+                            alternates: ex.alternates || [],
                         })),
                     })),
                 }),
@@ -277,39 +328,72 @@ export default function NewPlanPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {day.exercises.map((exercise, exIndex) => (
-                                <div
-                                    key={exIndex}
-                                    className="flex gap-2 items-center p-4 border rounded-lg"
-                                >
-                                    <GripVertical className="h-5 w-5 text-muted-foreground" />
-                                    <div className="flex-1">
-                                        <p className="font-medium">{exercise.exerciseName}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-20">
-                                            <Input
-                                                type="number"
-                                                min="1"
-                                                value={exercise.sets}
-                                                onChange={(e) =>
-                                                    updateExercise(dayIndex, exIndex, 'sets', parseInt(e.target.value))
-                                                }
-                                                className="h-9 text-center"
-                                                placeholder="Sets"
-                                            />
+                            {day.exercises.map((exercise, exIndex) => {
+                                const exerciseKey = `${dayIndex}-${exIndex}`
+                                const isSwiped = swipedExercise === exerciseKey
+
+                                return (
+                                    <div key={exIndex} className="relative overflow-hidden">
+                                        {/* Swipeable Exercise Card */}
+                                        <div
+                                            className={`flex gap-2 items-center p-4 border rounded-lg bg-card transition-transform duration-300 ${isSwiped ? '-translate-x-20' : 'translate-x-0'
+                                                }`}
+                                            onTouchStart={(e) => handleTouchStart(e, exerciseKey)}
+                                            onTouchMove={(e) => handleTouchMove(e, exerciseKey)}
+                                            onTouchEnd={handleTouchEnd}
+                                        >
+                                            <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                            <div className="flex-1">
+                                                <p className="font-medium">{exercise.exerciseName}</p>
+                                                {exercise.alternates && exercise.alternates.length > 0 ? (
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {exercise.alternates.length} alternate{exercise.alternates.length !== 1 ? 's' : ''}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-xs text-muted-foreground">Swipe left to add alternates</p>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-20">
+                                                    <Input
+                                                        type="number"
+                                                        min="1"
+                                                        value={exercise.sets}
+                                                        onChange={(e) =>
+                                                            updateExercise(dayIndex, exIndex, 'sets', parseInt(e.target.value))
+                                                        }
+                                                        className="h-9 text-center"
+                                                        placeholder="Sets"
+                                                    />
+                                                </div>
+                                                <span className="text-sm text-muted-foreground">sets</span>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => removeExercise(dayIndex, exIndex)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
-                                        <span className="text-sm text-muted-foreground">sets</span>
+
+                                        {/* Hidden Alternate Actions */}
+                                        <div className={`absolute right-0 top-0 h-full w-20 bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center transition-transform duration-300 ${isSwiped ? 'translate-x-0' : 'translate-x-full'
+                                            }`}>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <Button
+                                                    size="icon"
+                                                    className="h-12 w-12 rounded-full bg-emerald-700 hover:bg-emerald-800 shadow-lg"
+                                                    onClick={() => setShowAlternateSearch({ dayIndex, exerciseIndex: exIndex })}
+                                                >
+                                                    <Plus className="h-6 w-6 text-white" />
+                                                </Button>
+                                                <span className="text-xs text-white font-medium">Add</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => removeExercise(dayIndex, exIndex)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
+                                )
+                            })}
 
                             <ExerciseSearch onSelectExercise={(ex) => addExercise(dayIndex, ex)} />
                         </CardContent>
@@ -342,6 +426,27 @@ export default function NewPlanPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Alternate Exercise Search Modal */}
+            {showAlternateSearch && (
+                <div className="fixed inset-0 bg-black/50 flex items-end z-50">
+                    <div className="bg-background w-full max-h-[80vh] rounded-t-xl p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">Add Alternate Exercise</h3>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setShowAlternateSearch(null)}
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </Button>
+                        </div>
+                        <ExerciseSearch
+                            onSelectExercise={(ex) => addAlternate(showAlternateSearch.dayIndex, showAlternateSearch.exerciseIndex, ex)}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

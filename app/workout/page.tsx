@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { useToast } from '@/components/ui/use-toast'
-import { Play, Check, Youtube, Save } from 'lucide-react'
+import { Play, Check, Youtube, Shuffle } from 'lucide-react'
 import { openYouTubeExercise } from '@/lib/youtube'
 
 interface Plan {
@@ -39,9 +39,35 @@ export default function WorkoutPage() {
     const [sessionData, setSessionData] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(false)
 
+    const LOCAL_STORAGE_KEY = 'activeWorkoutSession'
+
     useEffect(() => {
         fetchPlans()
+        // Load session from local storage on component mount
+        const savedSession = localStorage.getItem(LOCAL_STORAGE_KEY)
+        if (savedSession) {
+            try {
+                const parsedSession = JSON.parse(savedSession)
+                // Validate if the session is still active (e.g., from today or recent)
+                // For simplicity, we'll just load it. More robust validation could be added.
+                setActiveSession(parsedSession.activeSession)
+                setSessionData(parsedSession.sessionData)
+                setSelectedPlan(parsedSession.activeSession.planId)
+                setSelectedDay(parsedSession.activeSession.planDayId)
+            } catch (error) {
+                console.error("Failed to parse saved session from local storage", error)
+                localStorage.removeItem(LOCAL_STORAGE_KEY) // Clear invalid data
+            }
+        }
     }, [])
+
+    useEffect(() => {
+        if (activeSession && sessionData) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ activeSession, sessionData }))
+        } else {
+            localStorage.removeItem(LOCAL_STORAGE_KEY)
+        }
+    }, [activeSession, sessionData])
 
     const fetchPlans = async () => {
         try {
@@ -118,12 +144,10 @@ export default function WorkoutPage() {
         setSessionData(newData)
     }
 
-    const saveProgress = async () => {
+    const finishWorkout = async () => {
         try {
-            // Get current token
+            // First, save the current progress
             const currentToken = useAuthStore.getState().accessToken
-
-            // Transform sessionData to match API schema - exerciseId must be string
             const formattedExercises = sessionData.map((ex: any) => ({
                 exerciseId: typeof ex.exerciseId === 'string' ? ex.exerciseId : ex.exerciseId._id,
                 sets: ex.sets.map((set: any) => ({
@@ -134,7 +158,7 @@ export default function WorkoutPage() {
                 notes: ex.notes || '',
             }))
 
-            const response = await fetch(`/api/sessions/${activeSession._id}`, {
+            const saveResponse = await fetch(`/api/sessions/${activeSession._id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${currentToken}`,
@@ -143,19 +167,12 @@ export default function WorkoutPage() {
                 body: JSON.stringify({ exercises: formattedExercises }),
             })
 
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Failed to save')
+            if (!saveResponse.ok) {
+                const errorData = await saveResponse.json()
+                throw new Error(errorData.error || 'Failed to save progress before finishing')
             }
 
-            toast({ title: 'Progress saved!' })
-        } catch (error: any) {
-            toast({ title: 'Error', description: error.message || 'Failed to save', variant: 'destructive' })
-        }
-    }
-
-    const finishWorkout = async () => {
-        try {
+            // Then, finish the workout
             const response = await fetch(`/api/sessions/${activeSession._id}/finish`, {
                 method: 'POST',
                 headers: {
@@ -196,15 +213,6 @@ export default function WorkoutPage() {
                                 Active Workout
                             </span>
                         </h1>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={saveProgress}
-                            className="gradient-emerald text-white border-0 hover:opacity-90 transition-opacity"
-                        >
-                            <Save className="h-4 w-4 mr-1.5" />
-                            Save
-                        </Button>
                     </div>
 
                     {/* Exercise Cards */}
@@ -256,6 +264,14 @@ export default function WorkoutPage() {
                                                 className="ml-2 hover:bg-red-500/10 text-red-500"
                                             >
                                                 <Youtube className="h-5 w-5" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => { /* Implement shuffle logic later */ }}
+                                                className="ml-1 hover:bg-blue-500/10 text-blue-500"
+                                            >
+                                                <Shuffle className="h-5 w-5" />
                                             </Button>
                                         </div>
                                     </CardHeader>

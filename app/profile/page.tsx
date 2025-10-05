@@ -257,12 +257,20 @@ export default function ProfilePage() {
                                     <div className="text-4xl font-black bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
                                         {latestWeight.toFixed(1)} kg
                                     </div>
-                                    {weightChange !== 0 && (
-                                        <div className={`text-sm font-semibold flex items-center gap-1 ${weightChange > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                                            <div className={`h-2 w-2 rounded-full ${weightChange > 0 ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                                            {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg from last
-                                        </div>
-                                    )}
+                                    {weightChange !== 0 && (() => {
+                                        // Determine if weight change is in the right direction toward goal
+                                        const targetWeight = userSettings?.targetWeight
+                                        const isWrongGrowth = targetWeight
+                                            ? (targetWeight < latestWeight && weightChange > 0) || (targetWeight > latestWeight && weightChange < 0)
+                                            : weightChange > 0 // Default: weight gain is "wrong growth" if no target set
+
+                                        return (
+                                            <div className={`text-sm font-semibold flex items-center gap-1 ${isWrongGrowth ? 'text-red-500' : 'text-emerald-500'}`}>
+                                                <div className={`h-2 w-2 rounded-full ${isWrongGrowth ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                                                {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg from last
+                                            </div>
+                                        )
+                                    })()}
                                 </div>
                             ) : (
                                 <p className="text-sm text-muted-foreground">No weight entries yet</p>
