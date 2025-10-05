@@ -20,7 +20,6 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-    console.log(process.env.NEXT_PUBLIC_APP_URL)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()

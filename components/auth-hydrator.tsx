@@ -5,7 +5,6 @@ import { useAuthStore } from '@/lib/stores/auth-store'
 
 export function AuthHydrator() {
   const hasHydrated = useAuthStore((state) => state.hasHydrated)
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const login = useAuthStore((state) => state.login)
   const logout = useAuthStore((state) => state.logout)
   const isRestoring = useAuthStore((state) => state.isRestoring)
@@ -14,7 +13,7 @@ export function AuthHydrator() {
   const setHasAttemptedRestore = useAuthStore((state) => state.setHasAttemptedRestore)
 
   useEffect(() => {
-    if (!hasHydrated || isAuthenticated || isRestoring || hasAttemptedRestore) {
+    if (!hasHydrated || isRestoring || hasAttemptedRestore) {
       return
     }
 
@@ -52,13 +51,10 @@ export function AuthHydrator() {
     restoreSession()
 
     return () => {
-      setIsRestoring(false)
       cancelled = true
     }
   }, [
     hasHydrated,
-    isAuthenticated,
-    isRestoring,
     hasAttemptedRestore,
     login,
     logout,

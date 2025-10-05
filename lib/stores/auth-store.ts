@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthState>()(
         isRestoring: false,
         hasAttemptedRestore: false,
         login: (token, user) =>
-          set({ accessToken: token, user, isAuthenticated: true }),
+          set({ accessToken: token, user, isAuthenticated: true, hasAttemptedRestore: true }),
         logout: () =>
           set({ accessToken: null, user: null, isAuthenticated: false, hasAttemptedRestore: true }),
         updateUser: (updatedUser) =>
