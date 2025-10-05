@@ -4,40 +4,56 @@ import dbConnect from '@/lib/db'
 import { User } from '@/lib/models/User'
 import { generateAccessToken, generateRefreshToken, setRefreshTokenCookie } from '@/lib/auth'
 
-const googleClient = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`
-)
+const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+const envAppUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+const defaultAppUrl = 'http://localhost:3000'
+const appUrl = envAppUrl || defaultAppUrl
+const googleRedirectUri = `${appUrl}/api/auth/google`
+
+const buildRedirectUrl = (req: NextRequest, pathname: string) => {
+  const baseUrl = envAppUrl || req.nextUrl.origin
+  return new URL(pathname, baseUrl)
+}
 
 export async function GET(req: NextRequest) {
   try {
+    if (!googleClientId || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.error('Google OAuth environment variables are not configured')
+      return NextResponse.redirect(buildRedirectUrl(req, '/auth/login?error=oauth_config'))
+    }
+
+    const googleClient = new OAuth2Client(
+      googleClientId,
+      process.env.GOOGLE_CLIENT_SECRET,
+      googleRedirectUri
+    )
+
     const url = new URL(req.url)
     const code = url.searchParams.get('code')
 
     if (!code) {
-      return NextResponse.redirect(new URL('/auth/login?error=missing_code', req.url))
+      return NextResponse.redirect(buildRedirectUrl(req, '/auth/login?error=missing_code'))
     }
 
     // Exchange code for tokens
-    const { tokens } = await googleClient.getToken(code)
+    const { tokens } = await googleClient.getToken({ code, redirect_uri: googleRedirectUri })
     googleClient.setCredentials(tokens)
 
     // Get user info from Google
     const ticket = await googleClient.verifyIdToken({
       idToken: tokens.id_token!,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: googleClientId,
     })
 
     const payload = ticket.getPayload()
     if (!payload) {
-      return NextResponse.redirect(new URL('/auth/login?error=invalid_token', req.url))
+      return NextResponse.redirect(buildRedirectUrl(req, '/auth/login?error=invalid_token'))
     }
 
     const { email, name, picture, sub: providerId } = payload
 
     if (!email || !name || !providerId) {
-      return NextResponse.redirect(new URL('/auth/login?error=missing_user_info', req.url))
+      return NextResponse.redirect(buildRedirectUrl(req, '/auth/login?error=missing_user_info'))
     }
 
     await dbConnect()
@@ -79,9 +95,9 @@ export async function GET(req: NextRequest) {
     await setRefreshTokenCookie(refreshToken)
 
     // Redirect to home page with success
-    return NextResponse.redirect(new URL('/', req.url))
+    return NextResponse.redirect(buildRedirectUrl(req, '/'))
   } catch (error) {
     console.error('Google OAuth error:', error)
-    return NextResponse.redirect(new URL('/auth/login?error=oauth_failed', req.url))
+    return NextResponse.redirect(buildRedirectUrl(req, '/auth/login?error=oauth_failed'))
   }
 }
