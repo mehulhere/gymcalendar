@@ -23,7 +23,12 @@ interface CalendarDay {
 type ViewMode = 'month' | 'heatmap'
 
 export function CalendarView() {
-    const { isAuthenticated, user, accessToken } = useAuthStore()
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+    const accessToken = useAuthStore((state) => state.accessToken)
+    const user = useAuthStore((state) => state.user)
+    const hasHydrated = useAuthStore((state) => state.hasHydrated)
+    const isRestoring = useAuthStore((state) => state.isRestoring)
+    const hasAttemptedRestore = useAuthStore((state) => state.hasAttemptedRestore)
     const router = useRouter()
     const { toast } = useToast()
     const [date, setDate] = useState<Date | undefined>(new Date())
@@ -34,10 +39,14 @@ export function CalendarView() {
     const [userSettings, setUserSettings] = useState<any>(null)
 
     useEffect(() => {
+        if (!hasHydrated || isRestoring || !hasAttemptedRestore) {
+            return
+        }
+
         if (!isAuthenticated) {
             router.push('/auth/login')
         }
-    }, [isAuthenticated, router])
+    }, [hasHydrated, hasAttemptedRestore, isAuthenticated, isRestoring, router])
 
     const fetchUserSettings = useCallback(async () => {
         try {
@@ -88,6 +97,10 @@ export function CalendarView() {
             fetchUserSettings()
         }
     }, [isAuthenticated, accessToken, fetchCalendarData, fetchUserSettings])
+
+    if (!hasHydrated || isRestoring || !hasAttemptedRestore) {
+        return null
+    }
 
     if (!isAuthenticated) {
         return null
@@ -246,4 +259,3 @@ export function CalendarView() {
         </div>
     )
 }
-

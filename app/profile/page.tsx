@@ -27,7 +27,13 @@ interface Goal {
 }
 
 export default function ProfilePage() {
-    const { user, logout, accessToken } = useAuthStore()
+    const user = useAuthStore((state) => state.user)
+    const logout = useAuthStore((state) => state.logout)
+    const accessToken = useAuthStore((state) => state.accessToken)
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+    const hasHydrated = useAuthStore((state) => state.hasHydrated)
+    const isRestoring = useAuthStore((state) => state.isRestoring)
+    const hasAttemptedRestore = useAuthStore((state) => state.hasAttemptedRestore)
     const router = useRouter()
     const { toast } = useToast()
     const { theme, setTheme } = useTheme()
@@ -91,10 +97,35 @@ export default function ProfilePage() {
 
     useEffect(() => {
         setMounted(true)
+    }, [])
+
+    useEffect(() => {
+        if (!hasHydrated || isRestoring || !hasAttemptedRestore) {
+            return
+        }
+
+        if (!isAuthenticated) {
+            router.push('/auth/login')
+        }
+    }, [hasHydrated, hasAttemptedRestore, isAuthenticated, isRestoring, router])
+
+    useEffect(() => {
+        if (!isAuthenticated || !accessToken || isRestoring || !hasAttemptedRestore) {
+            return
+        }
+
         fetchWeighIns()
         fetchGoals()
         fetchUserSettings()
-    }, [fetchWeighIns, fetchGoals, fetchUserSettings])
+    }, [
+        isAuthenticated,
+        accessToken,
+        isRestoring,
+        hasAttemptedRestore,
+        fetchWeighIns,
+        fetchGoals,
+        fetchUserSettings,
+    ])
 
     const updateTargetGoal = async () => {
         const weight = parseFloat(targetWeight)
@@ -210,6 +241,10 @@ export default function ProfilePage() {
     const weightChange = weighIns.length >= 2
         ? weighIns[0].weight - weighIns[1].weight
         : 0
+
+    if (!hasHydrated || isRestoring || !hasAttemptedRestore || !isAuthenticated) {
+        return null
+    }
 
     return (
         <div className="flex flex-col min-h-screen pb-24 bg-gradient-to-br from-background via-background to-primary/5">

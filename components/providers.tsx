@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { useState } from 'react'
+import { AuthHydrator } from '@/components/auth-hydrator'
 
 export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
@@ -24,10 +25,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 disableTransitionOnChange
             >
                 {children}
+                <AuthHydrator />
                 <Toaster />
             </ThemeProvider>
         </QueryClientProvider>
     )
 }
-
 
