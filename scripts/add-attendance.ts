@@ -14,7 +14,7 @@ async function addAttendanceForUser() {
 
     // Find user by email
     const userEmail = 'mehul22295@iiitd.ac.in';
-    const user = await User.findOne({ email: userEmail });
+    let user: any;
 
     if (!user) {
       console.log(`User with email ${userEmail} not found.`);
@@ -25,15 +25,8 @@ async function addAttendanceForUser() {
         console.log('No users found in the database. Creating user...');
         // Create the user
         const newUser = new User({
+          name: userEmail.split('@')[0],
           email: userEmail,
-          name: 'Mehul', // Default name, can be updated later
-          provider: 'credentials',
-          settings: {
-            unit: 'kg',
-            timezone: 'UTC',
-            equipment: [],
-            theme: 'dark'
-          }
         });
 
         await newUser.save();

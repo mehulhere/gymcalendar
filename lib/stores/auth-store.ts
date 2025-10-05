@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { create, type StoreApi } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 interface User {
@@ -30,31 +30,36 @@ interface AuthState {
   setHasAttemptedRestore: (state: boolean) => void
 }
 
+let storeRef: StoreApi<AuthState> | undefined
+
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, _get, api) => ({
-      user: null,
-      accessToken: null,
-      isAuthenticated: false,
-      hasHydrated: false,
-      isRestoring: false,
-      hasAttemptedRestore: false,
-      login: (token, user) =>
-        set({ accessToken: token, user, isAuthenticated: true }),
-      logout: () =>
-        set({ accessToken: null, user: null, isAuthenticated: false, hasAttemptedRestore: true }),
-      updateUser: (updatedUser) =>
-        set((state) => ({
-          user: state.user ? { ...state.user, ...updatedUser } : null,
-        })),
-      setHasHydrated: (state) => set({ hasHydrated: state }),
-      setIsRestoring: (state) => set({ isRestoring: state }),
-      setHasAttemptedRestore: (state) => set({ hasAttemptedRestore: state }),
-    }),
+    (set, _get, store) => {
+      storeRef = store
+      return {
+        user: null,
+        accessToken: null,
+        isAuthenticated: false,
+        hasHydrated: false,
+        isRestoring: false,
+        hasAttemptedRestore: false,
+        login: (token, user) =>
+          set({ accessToken: token, user, isAuthenticated: true }),
+        logout: () =>
+          set({ accessToken: null, user: null, isAuthenticated: false, hasAttemptedRestore: true }),
+        updateUser: (updatedUser) =>
+          set((state) => ({
+            user: state.user ? { ...state.user, ...updatedUser } : null,
+          })),
+        setHasHydrated: (state) => set({ hasHydrated: state }),
+        setIsRestoring: (state) => set({ isRestoring: state }),
+        setHasAttemptedRestore: (state) => set({ hasAttemptedRestore: state }),
+      }
+    },
     {
       name: 'auth-storage',
       onRehydrateStorage: () => (_state, _error) => {
-        api.setState({ hasHydrated: true, hasAttemptedRestore: false })
+        storeRef?.setState({ hasHydrated: true, hasAttemptedRestore: false })
       },
     }
   )
