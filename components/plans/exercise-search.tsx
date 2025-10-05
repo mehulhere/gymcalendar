@@ -16,15 +16,18 @@ interface Exercise {
 
 interface ExerciseSearchProps {
     onSelectExercise: (exercise: Exercise) => void
+    dropdownPlacement?: 'top' | 'bottom'
 }
 
-export function ExerciseSearch({ onSelectExercise }: ExerciseSearchProps) {
+export function ExerciseSearch({ onSelectExercise, dropdownPlacement = 'bottom' }: ExerciseSearchProps) {
     const { accessToken } = useAuthStore()
     const [query, setQuery] = useState('')
     const [exercises, setExercises] = useState<Exercise[]>([])
     const [isOpen, setIsOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
+
+    const dropdownPositionClass = dropdownPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
 
     useEffect(() => {
         if (query.length > 0) {
@@ -80,7 +83,7 @@ export function ExerciseSearch({ onSelectExercise }: ExerciseSearchProps) {
             </div>
 
             {isOpen && exercises.length > 0 && (
-                <div className="absolute z-50 w-full mt-2 bg-card border rounded-lg shadow-lg max-h-80 overflow-y-auto">
+                <div className={`absolute z-50 w-full ${dropdownPositionClass} bg-card border rounded-lg shadow-lg max-h-80 overflow-y-auto`}>
                     {exercises.map((exercise) => (
                         <button
                             key={exercise._id}
@@ -97,17 +100,16 @@ export function ExerciseSearch({ onSelectExercise }: ExerciseSearchProps) {
             )}
 
             {isOpen && query && exercises.length === 0 && !isLoading && (
-                <div className="absolute z-50 w-full mt-2 bg-card border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+                <div className={`absolute z-50 w-full ${dropdownPositionClass} bg-card border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground`}>
                     No exercises found. Try a different search term.
                 </div>
             )}
 
             {isLoading && (
-                <div className="absolute z-50 w-full mt-2 bg-card border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground">
+                <div className={`absolute z-50 w-full ${dropdownPositionClass} bg-card border rounded-lg shadow-lg p-4 text-center text-sm text-muted-foreground`}>
                     Searching...
                 </div>
             )}
         </div>
     )
 }
-

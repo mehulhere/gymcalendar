@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { useToast } from '@/components/ui/use-toast'
-import { Plus, Play, Edit, Trash2, CheckCircle2 } from 'lucide-react'
+import { Plus, Play, Edit, Trash2, CheckCircle2, Sparkles, Dumbbell } from 'lucide-react'
 
 interface Plan {
     _id: string
@@ -141,29 +141,51 @@ export default function PlansPage() {
                         </Card>
                     </div>
                 ) : plans.length === 0 ? (
-                    <div className="relative">
-                        <div className="absolute -inset-1 gradient-emerald rounded-3xl opacity-5 blur-2xl" />
-                        <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
-                            <CardHeader className="text-center pb-4">
-                                <CardTitle className="text-2xl">No Plans Yet</CardTitle>
-                                <CardDescription>Start building your fitness journey today</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground text-center mb-6">
-                                    Create your first workout plan to get started on your fitness goals 💪
+                    <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-card/90 backdrop-blur-sm p-8 md:p-10 shadow-[0_18px_50px_rgba(16,185,129,0.15)]">
+                        <div className="absolute -top-24 -right-12 h-64 w-64 rounded-full bg-emerald-500/12 blur-3xl" />
+                        <div className="absolute -bottom-36 -left-20 h-72 w-72 rounded-full bg-emerald-700/10 blur-3xl" />
+                        <div className="relative flex flex-col items-center gap-6 text-center">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                                <Sparkles className="h-4 w-4" />
+                                You're a plan away
+                            </span>
+                            <div className="space-y-2">
+                                <h2 className="text-3xl font-bold text-foreground">Make Your First Plan</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    A few taps today keeps your training dialed in all week.
                                 </p>
-                                <div className="relative">
-                                    <div className="absolute -inset-1 gradient-emerald rounded-2xl opacity-30 blur-xl" />
-                                    <Button
-                                        className="relative w-full touch-target-lg gradient-emerald text-white border-0 hover:opacity-90 transition-opacity"
-                                        onClick={() => router.push('/plans/new')}
-                                    >
-                                        <Plus className="h-5 w-5 mr-2" />
-                                        Create Your First Plan
-                                    </Button>
+                            </div>
+
+                            <div className="relative flex items-center justify-center">
+                                <div className="absolute h-36 w-36 rounded-full bg-emerald-500/10 blur-xl" />
+                                <div className="absolute h-44 w-44 rounded-full border border-emerald-500/20 animate-pulse" />
+                                <div className="relative flex items-center justify-center h-24 w-24 rounded-full bg-gradient-to-br from-emerald-500/20 via-transparent to-emerald-700/20 border border-emerald-500/30 shadow-inner shadow-emerald-900/20">
+                                    <Dumbbell
+                                        className="h-12 w-12 text-emerald-300 animate-spin"
+                                        style={{ animationDuration: '6s' }}
+                                    />
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {['Balanced splits', 'Weekly momentum', 'Track progress'].map((tag) => (
+                                    <span
+                                        key={tag}
+                                        className="rounded-full border border-border/50 bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+
+                            <Button
+                                className="mt-2 w-full max-w-xs touch-target-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-lg shadow-emerald-500/25 hover:from-emerald-500/95 hover:to-emerald-600/95"
+                                onClick={() => router.push('/plans/new')}
+                            >
+                                <Plus className="h-5 w-5 mr-2" />
+                                Create Your First Plan
+                            </Button>
+                        </div>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -249,5 +271,3 @@ export default function PlansPage() {
         </div>
     )
 }
-
-

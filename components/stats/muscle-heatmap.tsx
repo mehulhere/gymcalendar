@@ -107,33 +107,6 @@ export function MuscleHeatmap({ muscleVolumes, muscleSets }: MuscleHeatmapProps)
                 💡 Click on any body part for detailed stats
             </p>
 
-            {/* View Toggle Buttons (Mobile Only) */}
-            <div className="flex md:hidden justify-center gap-2 mb-4">
-                <button
-                    onClick={() => setActiveView('front')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeView === 'front'
-                        ? 'bg-primary text-primary-foreground shadow-md'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        }`}
-                >
-                    Front View
-                </button>
-                <button
-                    onClick={() => setActiveView('back')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeView === 'back'
-                        ? 'bg-primary text-primary-foreground shadow-md'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        }`}
-                >
-                    Back View
-                </button>
-            </div>
-
-            {/* Swipe instruction (Mobile Only) */}
-            <p className="text-xs text-center text-muted-foreground italic md:hidden mb-4">
-                👆 Tap buttons or swipe left/right to switch views
-            </p>
-
             {/* Dual View Container */}
             <div
                 className="relative overflow-hidden"

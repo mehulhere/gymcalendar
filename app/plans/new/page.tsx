@@ -91,6 +91,7 @@ export default function NewPlanPage() {
         exercise.alternates.push(alternateExercise._id)
         setDays(newDays)
         setShowAlternateSearch(null)
+        setSwipedExercise(null)
     }
 
     const removeAlternate = (dayIndex: number, exerciseIndex: number, alternateId: string) => {
@@ -237,7 +238,7 @@ export default function NewPlanPage() {
                             <Label htmlFor="planName">Plan Name</Label>
                             <Input
                                 id="planName"
-                                placeholder="e.g., Push Pull Legs"
+                                placeholder="e.g., Push Pull Legs Plan"
                                 value={planName}
                                 onChange={(e) => setPlanName(e.target.value)}
                                 className="touch-target"
@@ -442,6 +443,7 @@ export default function NewPlanPage() {
                             </Button>
                         </div>
                         <ExerciseSearch
+                            dropdownPlacement="top"
                             onSelectExercise={(ex) => addAlternate(showAlternateSearch.dayIndex, showAlternateSearch.exerciseIndex, ex)}
                         />
                     </div>
@@ -450,4 +452,3 @@ export default function NewPlanPage() {
         </div>
     )
 }
-

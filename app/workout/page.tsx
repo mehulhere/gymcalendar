@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { useToast } from '@/components/ui/use-toast'
-import { Play, Check, Youtube, Shuffle } from 'lucide-react'
+import { Play, Check, Youtube, Shuffle, ChevronLeft } from 'lucide-react'
 import { openYouTubeExercise } from '@/lib/youtube'
 
 interface Plan {
@@ -200,6 +200,11 @@ export default function WorkoutPage() {
         }
     }
 
+    const exitActiveWorkout = () => {
+        setActiveSession(null)
+        setSessionData(null)
+    }
+
     const selectedPlanData = plans.find(p => p._id === selectedPlan)
 
     if (activeSession && sessionData) {
@@ -213,6 +218,15 @@ export default function WorkoutPage() {
                                 Active Workout
                             </span>
                         </h1>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-2"
+                            onClick={exitActiveWorkout}
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                            Back
+                        </Button>
                     </div>
 
                     {/* Exercise Cards */}
@@ -414,5 +428,4 @@ export default function WorkoutPage() {
         </div>
     )
 }
-
 
