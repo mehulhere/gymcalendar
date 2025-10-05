@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,14 +41,7 @@ export default function ProfilePage() {
     const [targetDays, setTargetDays] = useState('')
     const [mounted, setMounted] = useState(false)
 
-    useEffect(() => {
-        setMounted(true)
-        fetchWeighIns()
-        fetchGoals()
-        fetchUserSettings()
-    }, [])
-
-    const fetchWeighIns = async () => {
+    const fetchWeighIns = useCallback(async () => {
         try {
             const response = await fetch('/api/weighins', {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -60,9 +53,9 @@ export default function ProfilePage() {
         } catch (error) {
             console.error('Failed to fetch weigh-ins:', error)
         }
-    }
+    }, [accessToken])
 
-    const fetchGoals = async () => {
+    const fetchGoals = useCallback(async () => {
         try {
             const response = await fetch('/api/goals', {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -74,9 +67,9 @@ export default function ProfilePage() {
         } catch (error) {
             console.error('Failed to fetch goals:', error)
         }
-    }
+    }, [accessToken])
 
-    const fetchUserSettings = async () => {
+    const fetchUserSettings = useCallback(async () => {
         try {
             const response = await fetch('/api/user/settings', {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -94,7 +87,14 @@ export default function ProfilePage() {
         } catch (error) {
             console.error('Failed to fetch user settings:', error)
         }
-    }
+    }, [accessToken])
+
+    useEffect(() => {
+        setMounted(true)
+        fetchWeighIns()
+        fetchGoals()
+        fetchUserSettings()
+    }, [fetchWeighIns, fetchGoals, fetchUserSettings])
 
     const updateTargetGoal = async () => {
         const weight = parseFloat(targetWeight)

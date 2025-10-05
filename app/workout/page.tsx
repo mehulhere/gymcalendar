@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -72,7 +72,7 @@ export default function WorkoutPage() {
         }
     }, [activeSession, sessionData])
 
-    const fetchPlans = async () => {
+    const fetchPlans = useCallback(async () => {
         try {
             const response = await fetch('/api/plans', {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -89,7 +89,11 @@ export default function WorkoutPage() {
         } catch (error) {
             console.error('Failed to fetch plans:', error)
         }
-    }
+    }, [accessToken])
+
+    useEffect(() => {
+        fetchPlans()
+    }, [fetchPlans])
 
     const startWorkout = async () => {
         if (!selectedPlan || !selectedDay) {
@@ -275,7 +279,7 @@ export default function WorkoutPage() {
                                 <Card className={`relative bg-card/95 backdrop-blur-sm border-border/50 transition-all duration-300 ${isComplete ? 'border-emerald-500/50' : ''
                                     }`}>
                                     <CardHeader>
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 <CardTitle className="text-lg md:text-xl font-bold flex items-center gap-2">
                                                     {exercise.exerciseId?.name || 'Exercise'}
@@ -286,48 +290,50 @@ export default function WorkoutPage() {
                                                         </div>
                                                     )}
                                                 </CardTitle>
-                                                <div className="mt-2 space-y-1">
-                                                    <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground">
-                                                            {completedSets} / {exercise.sets.length} sets
-                                                        </span>
-                                                        <span className="font-semibold text-emerald-600">
-                                                            {progress.toFixed(0)}%
-                                                        </span>
-                                                    </div>
-                                                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                                        <div
-                                                            className="h-full gradient-emerald transition-all duration-500"
-                                                            style={{ width: `${progress}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
                                             </div>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => openYouTubeExercise(exercise.exerciseId?.name || '')}
-                                                className="ml-2 hover:bg-red-500/10 text-red-500"
-                                            >
-                                                <Youtube className="h-5 w-5" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => switchToAlternate(exIndex)}
-                                                className="ml-1 hover:bg-blue-500/10 text-blue-500"
-                                            >
-                                                <Shuffle className="h-5 w-5" />
-                                            </Button>
+                                            <div className="flex items-center ml-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => openYouTubeExercise(exercise.exerciseId?.name || '')}
+                                                    className="hover:bg-red-500/10 text-red-500"
+                                                >
+                                                    <Youtube className="h-5 w-5" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => switchToAlternate(exIndex)}
+                                                    className="ml-1 hover:bg-blue-500/10 text-blue-500"
+                                                >
+                                                    <Shuffle className="h-5 w-5" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 space-y-1 w-full">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">
+                                                    {completedSets} / {exercise.sets.length} sets
+                                                </span>
+                                                <span className="font-semibold text-emerald-600">
+                                                    {progress.toFixed(0)}%
+                                                </span>
+                                            </div>
+                                            <div className="h-2 bg-muted rounded-full overflow-hidden w-full">
+                                                <div
+                                                    className="h-full gradient-emerald transition-all duration-500"
+                                                    style={{ width: `${progress}%` }}
+                                                />
+                                            </div>
                                         </div>
                                     </CardHeader>
-                                    <CardContent className="space-y-3">
+                                    <CardContent className="space-y-1">
                                         {exercise.sets.map((set: any, setIndex: number) => {
                                             const setComplete = set.reps > 0 && set.weight > 0
                                             return (
                                                 <div
                                                     key={setIndex}
-                                                    className={`grid grid-cols-[auto_1fr_1fr] gap-3 items-center p-3 rounded-xl transition-all ${setComplete ? 'bg-emerald-500/5 border border-emerald-500/20' : 'bg-muted/30'
+                                                    className={`grid grid-cols-[auto_1fr_1fr] gap-3 items-center p-2 rounded-xl transition-all ${setComplete ? 'bg-emerald-500/5 border border-emerald-500/20' : 'bg-card/95'
                                                         }`}
                                                 >
                                                     <Label className="text-sm font-semibold min-w-[4rem]">
@@ -399,15 +405,15 @@ export default function WorkoutPage() {
                     <div className="absolute -top-24 -left-10 h-64 w-64 rounded-full bg-emerald-500/12 blur-3xl" />
                     <div className="absolute -bottom-36 -right-16 h-72 w-72 rounded-full bg-emerald-700/10 blur-3xl" />
                     <div className="relative flex flex-col lg:flex-row items-center gap-8">
-                        <div className="space-y-5 text-center lg:text-left max-w-lg">
+                        <div className="space-y-3 text-center lg:text-left max-w-lg">
                             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-200">
                                 <Sparkles className="h-4 w-4" />
-                                Today's session awaits
+                                Today&apos;s session awaits
                             </span>
                             <div className="space-y-2">
                                 <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">Start Workout</h1>
                                 <p className="text-sm md:text-base text-muted-foreground">
-                                    Pick your plan, lock in a focus, and crush today's training.
+                                    Plan, Lock in and get, set, go.
                                 </p>
                             </div>
                             <div className="flex justify-center lg:justify-start">
@@ -415,24 +421,19 @@ export default function WorkoutPage() {
                             </div>
 
                         </div>
-                        <div className="w-full max-w-md bg-background/70 border border-border/40 rounded-2xl p-6 shadow-lg backdrop-blur-sm space-y-5">
+                        <div className="w-full max-w-md bg-background/70 border border-border/40 rounded-2xl p-6 shadow-lg backdrop-blur-sm space-y-3">
                             <div className="space-y-3">
                                 <Label className="text-sm font-semibold text-foreground">Workout Plan</Label>
-                                <select
-                                    className="w-full p-3 border border-border/50 rounded-xl bg-background/80 touch-target font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                                    value={selectedPlan}
-                                    onChange={(e) => {
-                                        setSelectedPlan(e.target.value)
-                                        setSelectedDay('')
-                                    }}
-                                >
-                                    <option value="">Choose a plan...</option>
-                                    {plans.map(plan => (
-                                        <option key={plan._id} value={plan._id}>
-                                            {plan.name} {plan.isActive && '✓ Active'}
-                                        </option>
-                                    ))}
-                                </select>
+                                {selectedPlanData ? (
+                                    <div className="w-full p-3 border border-border/50 rounded-xl bg-background/80 font-medium flex items-center justify-between">
+                                        <span>{selectedPlanData.name}</span>
+                                        <span className="text-emerald-500">✓ Active</span>
+                                    </div>
+                                ) : (
+                                    <div className="w-full p-3 border border-border/50 rounded-xl bg-background/80 font-medium text-muted-foreground">
+                                        No active plan
+                                    </div>
+                                )}
                             </div>
 
                             {selectedPlanData && (
@@ -455,7 +456,7 @@ export default function WorkoutPage() {
 
                             {plans.length === 0 && (
                                 <div className="rounded-xl border border-dashed border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                                    Build a plan first to unlock workouts.{' '}
+                                    Build a plan first to unlock workouts.&apos; &apos;
                                     <button
                                         type="button"
                                         className="underline decoration-emerald-400/80 hover:decoration-emerald-300 transition"

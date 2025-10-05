@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BottomNav } from '@/components/layout/bottom-nav'
@@ -37,66 +37,7 @@ export default function StatsPage() {
     const [userSettings, setUserSettings] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
 
-    useEffect(() => {
-        fetchStats()
-        fetchWeighIns()
-        fetchUserSettings()
-    }, [])
-
-    const fetchUserSettings = async () => {
-        try {
-            const response = await fetch('/api/user/settings', {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-            })
-            if (response.ok) {
-                const data = await response.json()
-                setUserSettings(data.settings)
-            }
-        } catch (error) {
-            console.error('Failed to fetch user settings:', error)
-        }
-    }
-
-    const fetchStats = async () => {
-        try {
-            // Fetch sessions for last 7 days
-            const endDate = new Date()
-            const startDate = new Date()
-            startDate.setDate(startDate.getDate() - 7)
-
-            const response = await fetch(
-                `/api/sessions?start=${startDate.toISOString()}&end=${endDate.toISOString()}`,
-                {
-                    headers: { 'Authorization': `Bearer ${accessToken}` },
-                }
-            )
-
-            if (response.ok) {
-                const data = await response.json()
-                calculateVolumes(data.sessions || [])
-            }
-        } catch (error) {
-            console.error('Failed to fetch stats:', error)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    const fetchWeighIns = async () => {
-        try {
-            const response = await fetch('/api/weighins', {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-            })
-            if (response.ok) {
-                const data = await response.json()
-                setWeighIns(data.weighIns || [])
-            }
-        } catch (error) {
-            console.error('Failed to fetch weigh-ins:', error)
-        }
-    }
-
-    const calculateVolumes = (sessions: any[]) => {
+    const calculateVolumes = useCallback((sessions: any[]) => {
         let totalVolume = 0
         const muscleVolumes: Record<string, number> = {}
         const muscleSets: Record<string, number> = {}
@@ -138,7 +79,66 @@ export default function StatsPage() {
             workoutCount,
             streak: 0, // Would calculate from attendance
         })
-    }
+    }, [])
+
+    const fetchUserSettings = useCallback(async () => {
+        try {
+            const response = await fetch('/api/user/settings', {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setUserSettings(data.settings)
+            }
+        } catch (error) {
+            console.error('Failed to fetch user settings:', error)
+        }
+    }, [accessToken])
+
+    const fetchStats = useCallback(async () => {
+        try {
+            // Fetch sessions for last 7 days
+            const endDate = new Date()
+            const startDate = new Date()
+            startDate.setDate(startDate.getDate() - 7)
+
+            const response = await fetch(
+                `/api/sessions?start=${startDate.toISOString()}&end=${endDate.toISOString()}`,
+                {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                }
+            )
+
+            if (response.ok) {
+                const data = await response.json()
+                calculateVolumes(data.sessions || [])
+            }
+        } catch (error) {
+            console.error('Failed to fetch stats:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }, [accessToken, calculateVolumes])
+
+    const fetchWeighIns = useCallback(async () => {
+        try {
+            const response = await fetch('/api/weighins', {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setWeighIns(data.weighIns || [])
+            }
+        } catch (error) {
+            console.error('Failed to fetch weigh-ins:', error)
+        }
+    }, [accessToken])
+
+    useEffect(() => {
+        fetchStats()
+        fetchWeighIns()
+        fetchUserSettings()
+    }, [fetchStats, fetchWeighIns, fetchUserSettings])
 
     const formatVolume = (volume: number) => {
         if (volume >= 1000) {
@@ -206,7 +206,7 @@ export default function StatsPage() {
                                     {formatVolume(volumeData.weeklyVolume)} kg
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    This week's total
+                                    This week&apos;s total
                                 </p>
                             </CardContent>
                         </Card>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,15 +25,7 @@ export default function MuscleStatsPage() {
     const [totalVolume, setTotalVolume] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
 
-    useEffect(() => {
-        if (params.muscle) {
-            const muscle = decodeURIComponent(params.muscle as string)
-            setMuscleName(muscle)
-            fetchMuscleStats(muscle)
-        }
-    }, [params.muscle, accessToken])
-
-    const fetchMuscleStats = async (muscle: string) => {
+    const fetchMuscleStats = useCallback(async (muscle: string) => {
         setIsLoading(true)
         try {
             // Fetch sessions for last 30 days
@@ -57,9 +49,9 @@ export default function MuscleStatsPage() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [accessToken, calculateMuscleVolume])
 
-    const calculateMuscleVolume = (sessions: any[], targetMuscle: string) => {
+    const calculateMuscleVolume = useCallback((sessions: any[], targetMuscle: string) => {
         const muscleSessionData: SessionData[] = []
         let total = 0
 
@@ -99,7 +91,15 @@ export default function MuscleStatsPage() {
             new Date(b.date).getTime() - new Date(a.date).getTime()
         ))
         setTotalVolume(total)
-    }
+    }, [])
+
+    useEffect(() => {
+        if (params.muscle) {
+            const muscle = decodeURIComponent(params.muscle as string)
+            setMuscleName(muscle)
+            fetchMuscleStats(muscle)
+        }
+    }, [params.muscle, fetchMuscleStats])
 
     return (
         <div className="flex flex-col min-h-screen pb-20">

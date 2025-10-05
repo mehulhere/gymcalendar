@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -29,15 +29,7 @@ export function ExerciseSearch({ onSelectExercise, dropdownPlacement = 'bottom' 
 
     const dropdownPositionClass = dropdownPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
 
-    useEffect(() => {
-        if (query.length > 0) {
-            searchExercises()
-        } else {
-            setExercises([])
-        }
-    }, [query])
-
-    const searchExercises = async () => {
+    const searchExercises = useCallback(async () => {
         setIsLoading(true)
         try {
             const response = await fetch(`/api/exercises/search?q=${encodeURIComponent(query)}`, {
@@ -56,7 +48,15 @@ export function ExerciseSearch({ onSelectExercise, dropdownPlacement = 'bottom' 
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [query, accessToken])
+
+    useEffect(() => {
+        if (query.length > 0) {
+            searchExercises()
+        } else {
+            setExercises([])
+        }
+    }, [query, searchExercises])
 
     const handleSelect = (exercise: Exercise) => {
         onSelectExercise(exercise)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -39,14 +39,7 @@ export function CalendarView() {
         }
     }, [isAuthenticated, router])
 
-    useEffect(() => {
-        if (isAuthenticated && accessToken) {
-            fetchCalendarData()
-            fetchUserSettings()
-        }
-    }, [isAuthenticated, accessToken])
-
-    const fetchUserSettings = async () => {
+    const fetchUserSettings = useCallback(async () => {
         try {
             const response = await fetch('/api/user/settings', {
                 headers: {
@@ -66,9 +59,9 @@ export function CalendarView() {
         } catch (error) {
             console.error('Failed to fetch user settings:', error)
         }
-    }
+    }, [accessToken])
 
-    const fetchCalendarData = async () => {
+    const fetchCalendarData = useCallback(async () => {
         setIsLoading(true)
         try {
             const currentMonth = format(new Date(), 'yyyy-MM')
@@ -87,7 +80,14 @@ export function CalendarView() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [accessToken])
+
+    useEffect(() => {
+        if (isAuthenticated && accessToken) {
+            fetchCalendarData()
+            fetchUserSettings()
+        }
+    }, [isAuthenticated, accessToken, fetchCalendarData, fetchUserSettings])
 
     if (!isAuthenticated) {
         return null

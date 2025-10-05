@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -27,11 +27,7 @@ export default function PlansPage() {
     const [plans, setPlans] = useState<Plan[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
-    useEffect(() => {
-        fetchPlans()
-    }, [])
-
-    const fetchPlans = async () => {
+    const fetchPlans = useCallback(async () => {
         try {
             const response = await fetch('/api/plans', {
                 headers: {
@@ -48,7 +44,11 @@ export default function PlansPage() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [accessToken])
+
+    useEffect(() => {
+        fetchPlans()
+    }, [fetchPlans])
 
     const activatePlan = async (planId: string) => {
         try {
@@ -147,7 +147,7 @@ export default function PlansPage() {
                         <div className="relative flex flex-col items-center gap-6 text-center">
                             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-200">
                                 <Sparkles className="h-4 w-4" />
-                                You're a plan away
+                                You&apos;re a plan away
                             </span>
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-bold text-foreground">Make Your First Plan</h2>
@@ -165,17 +165,6 @@ export default function PlansPage() {
                                         style={{ animationDuration: '6s' }}
                                     />
                                 </div>
-                            </div>
-
-                            <div className="flex flex-wrap justify-center gap-2">
-                                {['Balanced splits', 'Weekly momentum', 'Track progress'].map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="rounded-full border border-border/50 bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground"
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
                             </div>
 
                             <Button
@@ -263,13 +252,13 @@ export default function PlansPage() {
                                 </Card>
                             </div>
                         ))}
-
-                        <div className="flex min-h-[45vh] flex-col items-center justify-center gap-3 text-muted-foreground/70 pt-10">
-                            <Dumbbell className="h-14 w-14 -rotate-12 text-muted-foreground/60" />
-                            <p className="text-xs uppercase tracking-[0.5em] font-semibold">Keep stacking wins</p>
-                        </div>
                     </div>
                 )}
+            </div>
+
+            <div className="flex min-h-[45vh] flex-col items-center justify-center gap-3 text-muted-foreground/70 pt-10">
+                <Dumbbell className="h-14 w-14 -rotate-12 text-muted-foreground/60" />
+                <p className="text-xs uppercase tracking-[0.5em] font-semibold">Keep stacking wins</p>
             </div>
 
             <BottomNav />
