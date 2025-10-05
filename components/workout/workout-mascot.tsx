@@ -2,205 +2,265 @@
 
 export function WorkoutMascot() {
     return (
-        <div className="flex items-center justify-center">
+        <div className="mascot-wrapper">
             <div className="mascot-container">
-                <div className="mascot-head" />
-                <div className="mascot-body" />
-                <div className="mascot-belt" />
-                <div className="mascot-leg mascot-leg-left" />
-                <div className="mascot-leg mascot-leg-right" />
+                {/* Head */}
+                <div className="head" />
 
-                <div className="mascot-arm mascot-arm-left">
-                    <div className="mascot-forearm" />
-                    <div className="mascot-dumbbell mascot-dumbbell-left" />
+                {/* Neck */}
+                <div className="neck" />
+
+                {/* Torso */}
+                <div className="torso">
+                    <div className="abs-line" />
+                    <div className="pec pec-left" />
+                    <div className="pec pec-right" />
                 </div>
-                <div className="mascot-arm mascot-arm-right">
-                    <div className="mascot-forearm" />
-                    <div className="mascot-dumbbell mascot-dumbbell-right" />
+
+                {/* Left Arm */}
+                <div className="arm arm-left">
+                    <div className="shoulder" />
+                    <div className="bicep" />
+                    <div className="forearm">
+                        <div className="dumbbell" />
+                    </div>
+                </div>
+
+                {/* Right Arm */}
+                <div className="arm arm-right">
+                    <div className="shoulder" />
+                    <div className="bicep" />
+                    <div className="forearm">
+                        <div className="dumbbell" />
+                    </div>
                 </div>
             </div>
 
             <style jsx>{`
-                .mascot-container {
-                    position: relative;
-                    width: 96px;
-                    height: 120px;
+                .mascot-wrapper {
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    width: 100%;
+                    max-width: 180px;
+                    height: 240px;
                 }
 
-                .mascot-head {
+                .mascot-container {
+                    position: relative;
+                    width: 100%;
+                    height: 100%;
+                    filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.2));
+                }
+
+                .head {
                     position: absolute;
                     top: 0;
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 50%;
-                    background: linear-gradient(145deg, rgba(16, 185, 129, 0.8), rgba(6, 95, 70, 0.95));
-                    box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
-                }
-
-                .mascot-body {
-                    position: absolute;
-                    top: 28px;
-                    width: 48px;
-                    height: 54px;
-                    border-radius: 24px;
-                    background: linear-gradient(160deg, rgba(16, 185, 129, 0.75), rgba(5, 150, 105, 0.95));
-                    box-shadow: inset 0 0 12px rgba(4, 120, 87, 0.4);
-                }
-
-                .mascot-belt {
-                    position: absolute;
-                    top: 58px;
-                    width: 46px;
-                    height: 10px;
-                    border-radius: 999px;
-                    background: rgba(15, 118, 110, 0.9);
-                    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
-                }
-
-                .mascot-leg {
-                    position: absolute;
-                    bottom: 0;
-                    width: 14px;
-                    height: 42px;
-                    border-radius: 999px;
-                    background: linear-gradient(180deg, rgba(13, 148, 136, 0.75), rgba(6, 78, 59, 0.95));
-                }
-
-                .mascot-leg-left {
-                    left: 22px;
-                }
-
-                .mascot-leg-right {
-                    right: 22px;
-                }
-
-                .mascot-arm {
-                    position: absolute;
-                    top: 38px;
-                    width: 14px;
-                    height: 38px;
-                    border-radius: 999px;
-                    background: linear-gradient(145deg, rgba(13, 148, 136, 0.75), rgba(4, 120, 87, 0.95));
-                    transform-origin: top center;
-                    animation: curl 2.2s ease-in-out infinite;
-                }
-
-                .mascot-arm-left {
-                    left: 4px;
-                    transform: rotate(26deg);
-                }
-
-                .mascot-arm-right {
-                    right: 4px;
-                    transform: rotate(-26deg);
-                    animation-delay: -1.1s;
-                }
-
-                .mascot-forearm {
-                    position: absolute;
-                    bottom: -26px;
                     left: 50%;
                     transform: translateX(-50%);
-                    width: 12px;
-                    height: 32px;
-                    border-radius: 999px;
-                    background: linear-gradient(145deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.95));
-                    transform-origin: top center;
-                    animation: forearm 2.2s ease-in-out infinite;
+                    width: 40px;
+                    height: 40px;
+                    border: 3px solid rgba(16, 185, 129, 0.9);
+                    border-radius: 50%;
+                    background: transparent;
                 }
 
-                .mascot-arm-right .mascot-forearm {
-                    animation-delay: -1.1s;
-                }
-
-                .mascot-dumbbell {
+                .neck {
                     position: absolute;
-                    bottom: -42px;
-                    width: 34px;
-                    height: 14px;
-                    border-radius: 10px;
-                    background: rgba(16, 185, 129, 0.4);
-                    box-shadow: inset 0 0 6px rgba(16, 185, 129, 0.55);
-                    transform-origin: center;
+                    top: 38px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 20px;
+                    height: 15px;
+                    border-left: 2px solid rgba(16, 185, 129, 0.7);
+                    border-right: 2px solid rgba(16, 185, 129, 0.7);
+                    background: transparent;
                 }
 
-                .mascot-dumbbell::before,
-                .mascot-dumbbell::after {
+                .torso {
+                    position: absolute;
+                    top: 53px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 70px;
+                    height: 80px;
+                    border: 3px solid rgba(16, 185, 129, 0.9);
+                    border-radius: 35px 35px 15px 15px;
+                    background: transparent;
+                }
+
+                .abs-line {
+                    position: absolute;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 2px;
+                    height: 50px;
+                    background: rgba(16, 185, 129, 0.6);
+                }
+
+                .pec {
+                    position: absolute;
+                    top: 10px;
+                    width: 22px;
+                    height: 18px;
+                    border: 2px solid rgba(16, 185, 129, 0.6);
+                    border-radius: 50%;
+                    border-bottom: none;
+                }
+
+                .pec-left {
+                    left: 8px;
+                    border-right: none;
+                }
+
+                .pec-right {
+                    right: 8px;
+                    border-left: none;
+                }
+
+                .arm {
+                    position: absolute;
+                    top: 60px;
+                }
+
+                .arm-left {
+                    left: 20px;
+                    animation: curlLeft 2.5s ease-in-out infinite;
+                }
+
+                .arm-right {
+                    right: 20px;
+                    animation: curlRight 2.5s ease-in-out infinite;
+                    animation-delay: -1.25s;
+                }
+
+                .shoulder {
+                    position: relative;
+                    width: 38px;
+                    height: 38px;
+                    border: 3px solid rgba(16, 185, 129, 0.9);
+                    border-radius: 50%;
+                    background: transparent;
+                }
+
+                .bicep {
+                    position: absolute;
+                    top: 32px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 32px;
+                    height: 50px;
+                    border: 3px solid rgba(16, 185, 129, 0.9);
+                    border-radius: 50%;
+                    background: transparent;
+                    transform-origin: top center;
+                }
+
+                .bicep::after {
+                    content: '';
+                    position: absolute;
+                    top: 15px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 28px;
+                    height: 24px;
+                    border: 2px solid rgba(16, 185, 129, 0.5);
+                    border-radius: 50%;
+                    animation: bicepPump 2.5s ease-in-out infinite;
+                }
+
+                .arm-right .bicep::after {
+                    animation-delay: -1.25s;
+                }
+
+                .forearm {
+                    position: absolute;
+                    top: 78px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 22px;
+                    height: 60px;
+                    border: 3px solid rgba(16, 185, 129, 0.9);
+                    border-radius: 30% 30% 25% 25%;
+                    background: transparent;
+                    transform-origin: top center;
+                    animation: forearmCurl 2.5s ease-in-out infinite;
+                }
+
+                .arm-right .forearm {
+                    animation-delay: -1.25s;
+                }
+
+                .dumbbell {
+                    position: absolute;
+                    bottom: -28px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 32px;
+                    height: 10px;
+                    background: rgba(16, 185, 129, 0.9);
+                    border-radius: 5px;
+                }
+
+                .dumbbell::before,
+                .dumbbell::after {
                     content: '';
                     position: absolute;
                     top: 50%;
                     transform: translateY(-50%);
-                    width: 8px;
-                    height: 18px;
-                    border-radius: 4px;
-                    background: rgba(110, 231, 183, 0.9);
+                    width: 10px;
+                    height: 20px;
+                    background: rgba(16, 185, 129, 0.9);
+                    border-radius: 3px;
                 }
 
-                .mascot-dumbbell::before {
-                    left: -6px;
+                .dumbbell::before {
+                    left: -8px;
                 }
 
-                .mascot-dumbbell::after {
-                    right: -6px;
+                .dumbbell::after {
+                    right: -8px;
                 }
 
-                .mascot-dumbbell-left {
-                    left: -10px;
-                }
-
-                .mascot-dumbbell-right {
-                    right: -10px;
-                    animation-delay: -1.1s;
-                }
-
-                @keyframes curl {
-                    0%, 100% {
-                        transform: rotate(26deg);
+                @keyframes curlLeft {
+                    0%, 100% { 
+                        transform: rotate(0deg);
                     }
-                    50% {
+                    50% { 
                         transform: rotate(-5deg);
                     }
                 }
 
-                .mascot-arm-right {
-                    animation-name: curlRight;
-                }
-
                 @keyframes curlRight {
-                    0%, 100% {
-                        transform: rotate(-26deg);
+                    0%, 100% { 
+                        transform: rotate(0deg);
                     }
-                    50% {
+                    50% { 
                         transform: rotate(5deg);
                     }
                 }
 
-                @keyframes forearm {
-                    0%, 100% {
-                        transform: translateX(-50%) rotate(35deg);
+                @keyframes forearmCurl {
+                    0%, 100% { 
+                        transform: translateX(-50%) rotate(90deg);
                     }
-                    50% {
-                        transform: translateX(-50%) rotate(-35deg);
+                    50% { 
+                        transform: translateX(-50%) rotate(25deg);
                     }
                 }
 
-                .mascot-arm-right .mascot-forearm {
-                    animation-name: forearmRight;
-                }
-
-                @keyframes forearmRight {
-                    0%, 100% {
-                        transform: translateX(-50%) rotate(-35deg);
+                @keyframes bicepPump {
+                    0%, 100% { 
+                        transform: translateX(-50%) scale(0.9);
+                        opacity: 0.3;
                     }
-                    50% {
-                        transform: translateX(-50%) rotate(35deg);
+                    50% { 
+                        transform: translateX(-50%) scale(1.15);
+                        opacity: 0.7;
                     }
                 }
             `}</style>
         </div>
     )
 }
-

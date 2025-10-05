@@ -361,9 +361,6 @@ export default function WorkoutPage() {
                                 Start Workout
                             </span>
                         </h2>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Cue up your session and keep the streak alive
-                        </p>
                     </div>
                 </div>
 
@@ -385,16 +382,7 @@ export default function WorkoutPage() {
                             <div className="flex justify-center lg:justify-start">
                                 <WorkoutMascot />
                             </div>
-                            <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-                                {['Dialed focus', 'Plan ahead', 'Log every rep'].map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="rounded-full border border-border/50 bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground"
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
+
                         </div>
                         <div className="w-full max-w-md bg-background/70 border border-border/40 rounded-2xl p-6 shadow-lg backdrop-blur-sm space-y-5">
                             <div className="space-y-3">
