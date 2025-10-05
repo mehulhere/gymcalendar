@@ -1,10 +1,6 @@
 import mongoose from 'mongoose'
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/gymtracker'
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable')
-}
+const MONGODB_URI = process.env.MONGODB_URI
 
 interface MongooseCache {
   conn: typeof mongoose | null
@@ -26,9 +22,17 @@ async function dbConnect() {
     return cached.conn
   }
 
+  if (!MONGODB_URI) {
+    throw new Error('Please define the MONGODB_URI environment variable for database connection')
+  }
+
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
     }
 
     cached.promise = mongoose.connect(MONGODB_URI, opts)

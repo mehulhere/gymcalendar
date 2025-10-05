@@ -10,6 +10,8 @@ A comprehensive Progressive Web App for tracking gym workouts, building plans, a
 - 📊 **Statistics**: Volume charts, muscle heatmaps, progress tracking
 - 🎯 **Goals**: Weight tracking with on-track calculations
 - 🤖 **AI Insights**: LLM-powered exercise tips, alternates, and insights
+- 🔐 **Authentication**: JWT-based auth with Google OAuth support
+- 🔑 **Password Reset**: Email-based password recovery
 - 📱 **PWA**: Installable, works offline, native app-like experience
 
 ## Tech Stack
@@ -38,14 +40,33 @@ A comprehensive Progressive Web App for tracking gym workouts, building plans, a
 npm install
 \`\`\`
 
-3. Create a `.env.local` file based on `.env.example`:
+3. Create a `.env.local` file based on the required environment variables:
 
 \`\`\`env
+# Database
 MONGODB_URI=mongodb://localhost:27017/gymtracker
-JWT_SECRET=your-secret-key
-JWT_REFRESH_SECRET=your-refresh-secret
-OPENAI_API_KEY=your-openai-key (optional)
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# JWT Secrets (generate secure random strings)
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_REFRESH_SECRET=your-super-secret-refresh-key-change-this-in-production
+
+# Google OAuth (get from Google Cloud Console)
+GOOGLE_CLIENT_ID=your-google-client-id.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Email (for password reset - optional for development)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM=your-email@gmail.com
+
+# NextAuth URL (for production)
+NEXTAUTH_URL=https://your-domain.com
+
+# OpenAI API Key (optional)
+OPENAI_API_KEY=your-openai-key
 \`\`\`
 
 4. Seed the exercise database:
@@ -54,13 +75,23 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 npm run seed
 \`\`\`
 
-5. Run the development server:
+5. Set up Google OAuth (optional):
+
+   a. Go to [Google Cloud Console](https://console.cloud.google.com/)
+   b. Create a new project or select existing one
+   c. Enable Google+ API
+   d. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"
+   e. Set authorized redirect URI to: `http://localhost:3000/api/auth/google` (for development)
+   f. Add production redirect URI: `https://your-domain.com/api/auth/google` (for production)
+   g. Copy Client ID and Client Secret to your `.env.local`
+
+6. Run the development server:
 
 \`\`\`bash
 npm run dev
 \`\`\`
 
-6. Open [http://localhost:3000](http://localhost:3000)
+7. Open [http://localhost:3000](http://localhost:3000)
 
 ### Building for Production
 
@@ -94,6 +125,9 @@ npm start
 - JWT-based auth with access (15min) and refresh (30d) tokens
 - HttpOnly cookies for refresh token
 - Protected API routes
+- Google OAuth integration for social login
+- Password reset via email with secure tokens
+- Multi-provider support (credentials, Google)
 
 ### Workout Tracking
 - Exercise dictionary with 200+ pre-seeded exercises

@@ -9,14 +9,16 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { useAuthStore } from '@/lib/stores/auth-store'
+import { Separator } from '@/components/ui/separator'
 
 export default function LoginPage() {
     const router = useRouter()
     const { toast } = useToast()
     const login = useAuthStore((state) => state.login)
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -49,6 +51,64 @@ export default function LoginPage() {
             })
         } finally {
             setIsLoading(false)
+        }
+    }
+
+    const handleGoogleLogin = async () => {
+        setIsGoogleLoading(true)
+        try {
+            // Redirect to Google OAuth
+            const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+                `client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&` +
+                `redirect_uri=${encodeURIComponent(`${window.location.origin}/api/auth/google`)}&` +
+                `response_type=code&` +
+                `scope=openid%20email%20profile&` +
+                `access_type=offline`
+
+            window.location.href = googleAuthUrl
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: 'Failed to initiate Google login',
+                variant: 'destructive',
+            })
+            setIsGoogleLoading(false)
+        }
+    }
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            toast({
+                title: 'Email Required',
+                description: 'Please enter your email address first',
+                variant: 'destructive',
+            })
+            return
+        }
+
+        try {
+            const response = await fetch('/api/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to send reset email')
+            }
+
+            toast({
+                title: 'Reset Email Sent',
+                description: data.message,
+            })
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error.message || 'Failed to send reset email',
+                variant: 'destructive',
+            })
         }
     }
 
@@ -95,12 +155,43 @@ export default function LoginPage() {
                         >
                             {isLoading ? 'Logging in...' : 'Login'}
                         </Button>
-                        <p className="text-sm text-center text-muted-foreground">
-                            Don&apos;t have an account?{' '}
-                            <Link href="/auth/signup" className="text-primary hover:underline">
-                                Sign up
-                            </Link>
-                        </p>
+
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <Separator className="w-full" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">
+                                    Or continue with
+                                </span>
+                            </div>
+                        </div>
+
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full touch-target-lg"
+                            onClick={handleGoogleLogin}
+                            disabled={isGoogleLoading}
+                        >
+                            {isGoogleLoading ? 'Connecting...' : 'Continue with Google'}
+                        </Button>
+
+                        <div className="flex flex-col space-y-2 text-sm text-center">
+                            <button
+                                type="button"
+                                onClick={handleForgotPassword}
+                                className="text-primary hover:underline"
+                            >
+                                Forgot your password?
+                            </button>
+                            <p className="text-muted-foreground">
+                                Don&apos;t have an account?{' '}
+                                <Link href="/auth/signup" className="text-primary hover:underline">
+                                    Sign up
+                                </Link>
+                            </p>
+                        </div>
                     </CardFooter>
                 </form>
             </Card>

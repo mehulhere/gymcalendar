@@ -3,8 +3,13 @@ import mongoose, { Schema, Model } from 'mongoose'
 export interface IUser {
   _id: mongoose.Types.ObjectId
   email: string
-  password_hash: string
+  password_hash?: string // Optional for OAuth users
   name: string
+  image?: string // Profile image URL for OAuth users
+  provider: 'credentials' | 'google' | 'github' // Auth provider
+  providerId?: string // OAuth provider user ID
+  passwordResetToken?: string
+  passwordResetExpires?: Date
   settings: {
     unit: 'kg' | 'lb'
     timezone: string
@@ -29,13 +34,24 @@ const UserSchema = new Schema<IUser>({
   },
   password_hash: {
     type: String,
-    required: true
+    required: function() {
+      return this.provider === 'credentials'
+    }
   },
   name: {
     type: String,
     required: true,
     trim: true
   },
+  image: String,
+  provider: {
+    type: String,
+    enum: ['credentials', 'google', 'github'],
+    default: 'credentials'
+  },
+  providerId: String,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
   settings: {
     unit: {
       type: String,
@@ -63,8 +79,6 @@ const UserSchema = new Schema<IUser>({
 }, {
   timestamps: true
 })
-
-UserSchema.index({ email: 1 })
 
 export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema)
 
