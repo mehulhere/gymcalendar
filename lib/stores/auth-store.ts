@@ -32,7 +32,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, _get, api) => ({
       user: null,
       accessToken: null,
       isAuthenticated: false,
@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       onRehydrateStorage: () => (_state, _error) => {
-        set({ hasHydrated: true, hasAttemptedRestore: false })
+        api.setState({ hasHydrated: true, hasAttemptedRestore: false })
       },
     }
   )
