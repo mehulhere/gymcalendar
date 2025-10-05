@@ -44,34 +44,6 @@ export default function WorkoutPage() {
 
     const LOCAL_STORAGE_KEY = 'activeWorkoutSession'
 
-    useEffect(() => {
-        fetchPlans()
-        // Load session from local storage on component mount
-        const savedSession = localStorage.getItem(LOCAL_STORAGE_KEY)
-        if (savedSession) {
-            try {
-                const parsedSession = JSON.parse(savedSession)
-                // Validate if the session is still active (e.g., from today or recent)
-                // For simplicity, we'll just load it. More robust validation could be added.
-                setActiveSession(parsedSession.activeSession)
-                setSessionData(parsedSession.sessionData)
-                setSelectedPlan(parsedSession.activeSession.planId)
-                setSelectedDay(parsedSession.activeSession.planDayId)
-            } catch (error) {
-                console.error("Failed to parse saved session from local storage", error)
-                localStorage.removeItem(LOCAL_STORAGE_KEY) // Clear invalid data
-            }
-        }
-    }, [])
-
-    useEffect(() => {
-        if (activeSession && sessionData) {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ activeSession, sessionData }))
-        } else {
-            localStorage.removeItem(LOCAL_STORAGE_KEY)
-        }
-    }, [activeSession, sessionData])
-
     const fetchPlans = useCallback(async () => {
         try {
             const response = await fetch('/api/plans', {
@@ -90,6 +62,39 @@ export default function WorkoutPage() {
             console.error('Failed to fetch plans:', error)
         }
     }, [accessToken])
+    useEffect(() => {
+        fetchPlans()
+        // Load session from local storage on component mount
+        if (typeof window !== 'undefined') {
+            const savedSession = localStorage.getItem(LOCAL_STORAGE_KEY)
+            if (savedSession) {
+                try {
+                    const parsedSession = JSON.parse(savedSession)
+                    // Validate if the session is still active (e.g., from today or recent)
+                    // For simplicity, we'll just load it. More robust validation could be added.
+                    setActiveSession(parsedSession.activeSession)
+                    setSessionData(parsedSession.sessionData)
+                    setSelectedPlan(parsedSession.activeSession.planId)
+                    setSelectedDay(parsedSession.activeSession.planDayId)
+                } catch (error) {
+                    console.error("Failed to parse saved session from local storage", error)
+                    localStorage.removeItem(LOCAL_STORAGE_KEY) // Clear invalid data
+                }
+            }
+        }
+    }, [fetchPlans])
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            if (activeSession && sessionData) {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ activeSession, sessionData }))
+            } else {
+                localStorage.removeItem(LOCAL_STORAGE_KEY)
+            }
+        }
+    }, [activeSession, sessionData])
+
+
 
     useEffect(() => {
         fetchPlans()

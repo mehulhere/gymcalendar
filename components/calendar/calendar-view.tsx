@@ -170,7 +170,7 @@ export function CalendarView() {
                                 </h1>
                             </div>
                             <p className="text-sm md:text-base text-muted-foreground font-medium">
-                                Let's crush today's goals 💪
+                                Let&apos;s crush today&apos;s goals 💪
                             </p>
                         </div>
 

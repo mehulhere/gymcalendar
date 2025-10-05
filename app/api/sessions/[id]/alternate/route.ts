@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import dbConnect from '@/lib/db'
 import { withAuth, AuthenticatedRequest } from '@/lib/auth-middleware'
@@ -12,15 +12,16 @@ const bodySchema = z.object({
 })
 
 // POST /api/sessions/:id/alternate
-async function switchAlternate(req: AuthenticatedRequest, { params }: { params: { id: string } }) {
+async function switchAlternate(req: AuthenticatedRequest, context?: { params: Promise<{ id: string }> }) {
   try {
+    const params = await context?.params
     const body = await req.json()
     const { exerciseIndex } = bodySchema.parse(body)
 
     await dbConnect()
 
     // Load session and ensure ownership
-    const session = await Session.findOne({ _id: params.id, userId: req.user!.userId }).populate('exercises.exerciseId', 'name primary_muscles equipment')
+    const session = await Session.findOne({ _id: params?.id, userId: req.user!.userId }).populate('exercises.exerciseId', 'name primary_muscles equipment')
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
@@ -82,7 +83,9 @@ async function switchAlternate(req: AuthenticatedRequest, { params }: { params: 
       current.exerciseId = suggestion._id
     } else {
       // Use plan-defined next alternate
-      current.exerciseId = nextExerciseId
+      if (nextExerciseId) {
+        current.exerciseId = new Types.ObjectId(nextExerciseId)
+      }
     }
 
     // Preserve original

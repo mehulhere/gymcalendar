@@ -25,32 +25,7 @@ export default function MuscleStatsPage() {
     const [totalVolume, setTotalVolume] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
 
-    const fetchMuscleStats = useCallback(async (muscle: string) => {
-        setIsLoading(true)
-        try {
-            // Fetch sessions for last 30 days
-            const endDate = new Date()
-            const startDate = new Date()
-            startDate.setDate(startDate.getDate() - 30)
-
-            const response = await fetch(
-                `/api/sessions?start=${startDate.toISOString()}&end=${endDate.toISOString()}`,
-                {
-                    headers: { 'Authorization': `Bearer ${accessToken}` },
-                }
-            )
-
-            if (response.ok) {
-                const data = await response.json()
-                calculateMuscleVolume(data.sessions || [], muscle)
-            }
-        } catch (error) {
-            console.error('Failed to fetch muscle stats:', error)
-        } finally {
-            setIsLoading(false)
-        }
-    }, [accessToken, calculateMuscleVolume])
-
+    // Calculate muscle volume from sessions data
     const calculateMuscleVolume = useCallback((sessions: any[], targetMuscle: string) => {
         const muscleSessionData: SessionData[] = []
         let total = 0
@@ -92,6 +67,32 @@ export default function MuscleStatsPage() {
         ))
         setTotalVolume(total)
     }, [])
+
+    const fetchMuscleStats = useCallback(async (muscle: string) => {
+        setIsLoading(true)
+        try {
+            // Fetch sessions for last 30 days
+            const endDate = new Date()
+            const startDate = new Date()
+            startDate.setDate(startDate.getDate() - 30)
+
+            const response = await fetch(
+                `/api/sessions?start=${startDate.toISOString()}&end=${endDate.toISOString()}`,
+                {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                }
+            )
+
+            if (response.ok) {
+                const data = await response.json()
+                calculateMuscleVolume(data.sessions || [], muscle)
+            }
+        } catch (error) {
+            console.error('Failed to fetch muscle stats:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }, [accessToken, calculateMuscleVolume])
 
     useEffect(() => {
         if (params.muscle) {
