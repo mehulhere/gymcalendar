@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { useToast } from '@/components/ui/use-toast'
-import { Play, Check, Youtube, Shuffle, ChevronLeft } from 'lucide-react'
+import { Play, Check, Youtube, Shuffle, ChevronLeft, Sparkles } from 'lucide-react'
+import { WorkoutMascot } from '@/components/workout/workout-mascot'
 import { openYouTubeExercise } from '@/lib/youtube'
 
 interface Plan {
@@ -352,29 +353,54 @@ export default function WorkoutPage() {
 
     return (
         <div className="flex flex-col min-h-screen pb-24 bg-gradient-to-br from-background via-background to-primary/5">
-            <div className="flex-1 p-4 md:p-6 max-w-2xl mx-auto w-full space-y-6 animate-scale-in">
-                <div className="space-y-2">
-                    <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-                        <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
-                            Start Workout
-                        </span>
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Choose your plan and let's get started! 🔥
-                    </p>
+            <div className="flex-1 p-4 md:p-6 max-w-4xl mx-auto w-full space-y-6 animate-scale-in">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-3xl md:text-4xl font-black tracking-tight">
+                            <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
+                                Start Workout
+                            </span>
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Cue up your session and keep the streak alive
+                        </p>
+                    </div>
                 </div>
 
-                <div className="relative">
-                    <div className="absolute -inset-1 gradient-emerald rounded-3xl opacity-5 blur-2xl" />
-                    <Card className="relative bg-card/95 backdrop-blur-sm border-border/50">
-                        <CardHeader>
-                            <CardTitle className="text-xl font-bold">Select Plan</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-5">
+                <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-card/90 backdrop-blur-sm p-6 md:p-10 shadow-[0_18px_50px_rgba(16,185,129,0.15)]">
+                    <div className="absolute -top-24 -left-10 h-64 w-64 rounded-full bg-emerald-500/12 blur-3xl" />
+                    <div className="absolute -bottom-36 -right-16 h-72 w-72 rounded-full bg-emerald-700/10 blur-3xl" />
+                    <div className="relative flex flex-col lg:flex-row items-center gap-8">
+                        <div className="space-y-5 text-center lg:text-left max-w-lg">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                                <Sparkles className="h-4 w-4" />
+                                Today's session awaits
+                            </span>
+                            <div className="space-y-2">
+                                <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">Start Workout</h1>
+                                <p className="text-sm md:text-base text-muted-foreground">
+                                    Pick your plan, lock in a focus, and crush today's training.
+                                </p>
+                            </div>
+                            <div className="flex justify-center lg:justify-start">
+                                <WorkoutMascot />
+                            </div>
+                            <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+                                {['Dialed focus', 'Plan ahead', 'Log every rep'].map((tag) => (
+                                    <span
+                                        key={tag}
+                                        className="rounded-full border border-border/50 bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="w-full max-w-md bg-background/70 border border-border/40 rounded-2xl p-6 shadow-lg backdrop-blur-sm space-y-5">
                             <div className="space-y-3">
                                 <Label className="text-sm font-semibold text-foreground">Workout Plan</Label>
                                 <select
-                                    className="w-full p-3 border-2 border-border/50 rounded-xl bg-background/50 backdrop-blur-sm touch-target font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                                    className="w-full p-3 border border-border/50 rounded-xl bg-background/80 touch-target font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                                     value={selectedPlan}
                                     onChange={(e) => {
                                         setSelectedPlan(e.target.value)
@@ -394,7 +420,7 @@ export default function WorkoutPage() {
                                 <div className="space-y-3 animate-scale-in">
                                     <Label className="text-sm font-semibold text-foreground">Workout Day</Label>
                                     <select
-                                        className="w-full p-3 border-2 border-border/50 rounded-xl bg-background/50 backdrop-blur-sm touch-target font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                                        className="w-full p-3 border border-border/50 rounded-xl bg-background/80 touch-target font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                                         value={selectedDay}
                                         onChange={(e) => setSelectedDay(e.target.value)}
                                     >
@@ -408,10 +434,23 @@ export default function WorkoutPage() {
                                 </div>
                             )}
 
+                            {plans.length === 0 && (
+                                <div className="rounded-xl border border-dashed border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                                    Build a plan first to unlock workouts.{' '}
+                                    <button
+                                        type="button"
+                                        className="underline decoration-emerald-400/80 hover:decoration-emerald-300 transition"
+                                        onClick={() => router.push('/plans/new')}
+                                    >
+                                        Create a plan
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="relative pt-2">
-                                <div className="absolute -inset-1 gradient-emerald rounded-2xl opacity-30 blur-xl" />
+                                <div className="absolute -inset-1 rounded-2xl bg-emerald-500/20 blur-xl opacity-60" />
                                 <Button
-                                    className="relative w-full touch-target-lg gradient-emerald text-white border-0 hover:opacity-90 transition-all duration-300 shadow-lg disabled:opacity-50"
+                                    className="relative w-full touch-target-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 hover:from-emerald-500/95 hover:to-emerald-600/95 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     onClick={startWorkout}
                                     disabled={!selectedPlan || !selectedDay || isLoading}
                                 >
@@ -419,8 +458,8 @@ export default function WorkoutPage() {
                                     {isLoading ? 'Starting...' : 'Start Workout'}
                                 </Button>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -428,4 +467,3 @@ export default function WorkoutPage() {
         </div>
     )
 }
-

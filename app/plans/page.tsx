@@ -263,6 +263,11 @@ export default function PlansPage() {
                                 </Card>
                             </div>
                         ))}
+
+                        <div className="flex min-h-[45vh] flex-col items-center justify-center gap-3 text-muted-foreground/70 pt-10">
+                            <Dumbbell className="h-14 w-14 -rotate-12 text-muted-foreground/60" />
+                            <p className="text-xs uppercase tracking-[0.5em] font-semibold">Keep stacking wins</p>
+                        </div>
                     </div>
                 )}
             </div>
