@@ -38,6 +38,7 @@ export function CalendarView() {
     const [viewMode, setViewMode] = useState<ViewMode>('month')
     const [showTargetModal, setShowTargetModal] = useState(false)
     const [userSettings, setUserSettings] = useState<any>(null)
+    const [didRedirect, setDidRedirect] = useState(false)
 
     useEffect(() => {
         const cachedCalendar = readCache<CalendarDay[]>('calendar:data')
@@ -54,8 +55,18 @@ export function CalendarView() {
         }
     }, [])
 
-    // Do not imperatively redirect here to avoid render loops.
-    // We conditionally render a message when unauthenticated instead.
+    // Redirect unauthenticated users to login after hydration + restore attempt
+    useEffect(() => {
+        if (didRedirect) return
+        if (!hasHydrated) return
+        if (isRestoring) return
+        if (!hasAttemptedRestore) return
+
+        if (!isAuthenticated) {
+            setDidRedirect(true)
+            router.replace('/auth/login')
+        }
+    }, [didRedirect, hasHydrated, hasAttemptedRestore, isRestoring, isAuthenticated, router])
 
     const fetchUserSettings = useCallback(async () => {
         try {
