@@ -92,11 +92,22 @@ export function CalendarView() {
     }, [accessToken])
 
     useEffect(() => {
+        if (!hasAttemptedRestore || isRestoring) {
+            return
+        }
+
         if (isAuthenticated && accessToken) {
             fetchCalendarData()
             fetchUserSettings()
         }
-    }, [isAuthenticated, accessToken, fetchCalendarData, fetchUserSettings])
+    }, [
+        isAuthenticated,
+        accessToken,
+        hasAttemptedRestore,
+        isRestoring,
+        fetchCalendarData,
+        fetchUserSettings,
+    ])
 
     if (!hasHydrated || isRestoring || !hasAttemptedRestore) {
         return null

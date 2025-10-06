@@ -29,6 +29,7 @@ export default function LoginPage() {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ email, password }),
             })
 
@@ -200,4 +201,3 @@ export default function LoginPage() {
         </div>
     )
 }
-

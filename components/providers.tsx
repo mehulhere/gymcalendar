@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AuthHydrator } from '@/components/auth-hydrator'
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -15,6 +15,22 @@ export function Providers({ children }: { children: React.ReactNode }) {
             },
         },
     }))
+
+    useEffect(() => {
+        if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(registration => {
+                    if (registration.scope.includes(window.location.origin)) {
+                        registration.unregister().catch(() => {
+                            // ignore
+                        })
+                    }
+                })
+            }).catch(() => {
+                // ignore
+            })
+        }
+    }, [])
 
     return (
         <QueryClientProvider client={queryClient}>
@@ -31,4 +47,3 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </QueryClientProvider>
     )
 }
-

@@ -1,4 +1,8 @@
+import dotenv from 'dotenv'
 import { seedExercises } from '../lib/seed-exercises'
+
+// Load environment variables
+dotenv.config({ path: '.env.local' })
 
 async function main() {
   try {

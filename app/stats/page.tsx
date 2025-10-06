@@ -1,12 +1,17 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { MuscleHeatmap } from '@/components/stats/muscle-heatmap'
 import { WeightChart } from '@/components/stats/weight-chart'
-import { Target, Dumbbell } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Target, Dumbbell, Search, Loader2, ArrowUpRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { format } from 'date-fns'
+import type { ExerciseSummary } from '@/lib/stats/exercise-performance'
+import type { ProgressSummaryItem } from '@/lib/stats/progress'
 
 interface VolumeData {
     totalVolume: number
@@ -25,6 +30,7 @@ interface WeighIn {
 
 export default function StatsPage() {
     const { accessToken } = useAuthStore()
+    const router = useRouter()
     const [volumeData, setVolumeData] = useState<VolumeData>({
         totalVolume: 0,
         weeklyVolume: 0,
@@ -36,6 +42,13 @@ export default function StatsPage() {
     const [weighIns, setWeighIns] = useState<WeighIn[]>([])
     const [userSettings, setUserSettings] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [exerciseSummaries, setExerciseSummaries] = useState<ExerciseSummary[]>([])
+    const [isLoadingExercises, setIsLoadingExercises] = useState<boolean>(true)
+    const [exerciseError, setExerciseError] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [progressOverview, setProgressOverview] = useState<{ weekly: ProgressSummaryItem, monthly: ProgressSummaryItem } | null>(null)
+    const [isLoadingProgress, setIsLoadingProgress] = useState<boolean>(true)
+    const [progressError, setProgressError] = useState<string | null>(null)
 
     const calculateVolumes = useCallback((sessions: any[]) => {
         let totalVolume = 0
@@ -134,11 +147,95 @@ export default function StatsPage() {
         }
     }, [accessToken])
 
+    const fetchExerciseSummaries = useCallback(async () => {
+        setIsLoadingExercises(true)
+        setExerciseError(null)
+        try {
+            const response = await fetch('/api/stats/exercises', {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                setExerciseSummaries(data.exercises || [])
+            } else {
+                const errorData = await response.json().catch(() => null)
+                setExerciseError(errorData?.error || 'Unable to load exercises')
+            }
+        } catch (error) {
+            console.error('Failed to fetch exercise summaries:', error)
+            setExerciseError('Unable to load exercises')
+        } finally {
+            setIsLoadingExercises(false)
+        }
+    }, [accessToken])
+
+    const fetchProgressOverview = useCallback(async () => {
+        setIsLoadingProgress(true)
+        setProgressError(null)
+        try {
+            const response = await fetch('/api/stats/progress/overview', {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                setProgressOverview(data)
+            } else {
+                const errorData = await response.json().catch(() => null)
+                setProgressError(errorData?.error || 'Unable to load progress overview')
+            }
+        } catch (error) {
+            console.error('Failed to fetch progress overview:', error)
+            setProgressError('Unable to load progress overview')
+        } finally {
+            setIsLoadingProgress(false)
+        }
+    }, [accessToken])
+
     useEffect(() => {
+        if (!accessToken) return
         fetchStats()
         fetchWeighIns()
         fetchUserSettings()
-    }, [fetchStats, fetchWeighIns, fetchUserSettings])
+        fetchExerciseSummaries()
+        fetchProgressOverview()
+    }, [accessToken, fetchStats, fetchWeighIns, fetchUserSettings, fetchExerciseSummaries, fetchProgressOverview])
+
+    const filteredExercises = useMemo(() => {
+        if (exerciseSummaries.length === 0) return []
+        const query = searchQuery.trim().toLowerCase()
+        const limit = query.length === 0 ? 5 : 10
+
+        if (query.length === 0) {
+            return exerciseSummaries.slice(0, limit)
+        }
+
+        return exerciseSummaries
+            .filter(summary => {
+                const nameMatch = summary.name.toLowerCase().includes(query)
+                const primaryMatch = summary.primaryMuscles.some(muscle => muscle.toLowerCase().includes(query))
+                const secondaryMatch = summary.secondaryMuscles.some(muscle => muscle.toLowerCase().includes(query))
+                return nameMatch || primaryMatch || secondaryMatch
+            })
+            .slice(0, limit)
+    }, [exerciseSummaries, searchQuery])
+
+    const formatWeight = (weight: number) => {
+        return Number.isInteger(weight) ? `${weight}` : weight.toFixed(1)
+    }
+
+    const formatPersonalBest = (record: ExerciseSummary['personalBest']) => {
+        if (!record) {
+            return '—'
+        }
+        return `${formatWeight(record.weight)} kg × ${record.reps} reps`
+    }
+
+    const formatLastPerformed = (date: string | null) => {
+        if (!date) return 'Never performed'
+        return `Last on ${format(new Date(date), 'MMM d, yyyy')}`
+    }
 
     const formatVolume = (volume: number) => {
         if (volume >= 1000) {
@@ -151,6 +248,34 @@ export default function StatsPage() {
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5)
 
+    const formatPercent = (value: number) => {
+        if (!Number.isFinite(value)) return '0%'
+        const rounded = Math.abs(value) >= 10 ? value.toFixed(0) : value.toFixed(1)
+        return `${rounded}%`
+    }
+
+    const getTrendStyles = (value: number) => {
+        if (value > 0) {
+            return {
+                text: 'text-emerald-500',
+                badge: 'bg-emerald-500/10 text-emerald-500',
+                label: 'Up from previous',
+            }
+        }
+        if (value < 0) {
+            return {
+                text: 'text-red-500',
+                badge: 'bg-red-500/10 text-red-500',
+                label: 'Down from previous',
+            }
+        }
+        return {
+            text: 'text-muted-foreground',
+            badge: 'bg-muted text-muted-foreground',
+            label: 'No change',
+        }
+    }
+
     return (
         <div className="flex flex-col min-h-screen pb-24 bg-gradient-to-br from-background via-background to-primary/5">
             <div className="flex-1 p-4 md:p-6 max-w-6xl mx-auto w-full space-y-6 animate-scale-in">
@@ -159,6 +284,7 @@ export default function StatsPage() {
                         Your Stats
                     </span>
                 </h1>
+
 
                 {/* Summary Cards - Enhanced */}
                 <div className="grid grid-cols-2 gap-3 md:gap-4">
@@ -227,8 +353,139 @@ export default function StatsPage() {
                     </Card>
                 </div>
 
-                {/* Top Trained Muscles */}
-                <Card>
+                {/* Exercise Personal Best Search */}
+                <Card className="bg-card/95 backdrop-blur-sm border-border/50">
+                    <CardHeader>
+                        <CardTitle className="text-xl md:text-2xl font-bold">Exercise Personal Bests</CardTitle>
+                        <CardDescription>Search any exercise you have logged to jump into detailed stats</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                value={searchQuery}
+                                onChange={(event) => setSearchQuery(event.target.value)}
+                                placeholder="Search your exercises (e.g., bench press, squat)"
+                                className="pl-10"
+                            />
+                        </div>
+
+                        {exerciseError && (
+                            <div className="text-sm text-destructive">{exerciseError}</div>
+                        )}
+
+                        {isLoadingExercises ? (
+                            <div className="flex items-center justify-center py-6 text-muted-foreground text-sm gap-2">
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                Loading your exercise history...
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {filteredExercises.length > 0 ? (
+                                    filteredExercises.map(exercise => (
+                                        <button
+                                            key={exercise.exerciseId}
+                                            onClick={() => router.push(`/exercises/${exercise.exerciseId}`)}
+                                            className="w-full text-left p-4 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-semibold text-base md:text-lg">{exercise.name}</p>
+                                                        <div className="inline-flex items-center gap-2 text-xs font-medium">
+                                                            <span className={exercise.personalBest ? 'text-primary' : 'text-muted-foreground'}>PB</span>
+                                                            <span className="text-foreground">{formatPersonalBest(exercise.personalBest)}</span>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                                                        {exercise.primaryMuscles.join(', ')}
+                                                    </p>
+                                                </div>
+                                                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-3">
+                                                <span>{formatLastPerformed(exercise.lastPerformedAt)}</span>
+                                                <span>•</span>
+                                                <span>{exercise.totalSessions} session{exercise.totalSessions === 1 ? '' : 's'}</span>
+                                                <span>•</span>
+                                                <span>{exercise.totalSets} set{exercise.totalSets === 1 ? '' : 's'}</span>
+                                                {exercise.personalBest?.date && (
+                                                    <span>
+                                                        • PB logged {format(new Date(exercise.personalBest.date), 'MMM d, yyyy')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="text-sm text-muted-foreground text-center py-6">
+                                        {exerciseSummaries.length === 0
+                                            ? 'No exercises logged yet. Complete a workout to build your history.'
+                                            : 'No exercises matched your search. Try a different name or muscle group.'}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                </CardContent>
+            </Card>
+
+            {/* Weekly & Monthly Progress */}
+            <Card className="bg-card/95 backdrop-blur-sm border-border/50">
+                <CardHeader className="pb-4">
+                    <CardTitle className="text-xl md:text-2xl font-bold">Weekly & Monthly Progress</CardTitle>
+                    <CardDescription>Track how your volume trends against the previous period</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {progressError && (
+                        <div className="text-sm text-destructive">{progressError}</div>
+                    )}
+
+                    {isLoadingProgress ? (
+                        <div className="flex items-center justify-center py-6 text-muted-foreground text-sm gap-2">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Calculating progress...
+                        </div>
+                    ) : !progressOverview ? (
+                        <div className="text-sm text-muted-foreground text-center py-6">
+                            Unable to calculate progress yet.
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {(['weekly', 'monthly'] as const).map(period => {
+                                const data = progressOverview[period]
+                                const trend = getTrendStyles(data.percentChange)
+                                const percent = formatPercent(data.percentChange)
+                                const targetRoute = `/stats/progress/${period}`
+                                const title = period === 'weekly' ? 'Weekly Progress' : 'Monthly Progress'
+                                return (
+                                    <button
+                                        key={period}
+                                        onClick={() => router.push(targetRoute)}
+                                        className="w-full text-left px-4 py-3 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-semibold text-foreground">{title}</p>
+                                                <span className={`inline-flex items-center gap-2 text-xs font-medium px-2 py-1 rounded-full ${trend.badge}`}>
+                                                    <span className="font-semibold">{percent}</span>
+                                                    <span>{trend.label}</span>
+                                                </span>
+                                                <div className="text-xs text-muted-foreground">
+                                                    Current: {formatVolume(data.currentVolume)} kg • Previous: {formatVolume(data.previousVolume)} kg
+                                                </div>
+                                            </div>
+                                            <ArrowUpRight className={`h-4 w-4 ${trend.text}`} />
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Top Trained Muscles */}
+            <Card>
                     <CardHeader>
                         <CardTitle>Top Trained Muscles</CardTitle>
                         <CardDescription>This week&apos;s focus areas</CardDescription>

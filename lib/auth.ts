@@ -20,7 +20,7 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 
 export function generateAccessToken(payload: JWTPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '15m',
+    expiresIn: '15d',
   })
 }
 
@@ -51,8 +51,8 @@ export async function setRefreshTokenCookie(token: string) {
   cookieStore.set('refresh_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    sameSite: 'lax',
+    maxAge: 15 * 24 * 60 * 60, // 15 days to match access token window
     path: '/',
   })
 }
@@ -67,5 +67,3 @@ export async function getRefreshTokenFromCookie(): Promise<string | null> {
   const cookie = cookieStore.get('refresh_token')
   return cookie?.value || null
 }
-
-

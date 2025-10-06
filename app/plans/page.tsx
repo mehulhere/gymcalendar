@@ -47,8 +47,9 @@ export default function PlansPage() {
     }, [accessToken])
 
     useEffect(() => {
+        if (!accessToken) return
         fetchPlans()
-    }, [fetchPlans])
+    }, [accessToken, fetchPlans])
 
     const activatePlan = async (planId: string) => {
         try {

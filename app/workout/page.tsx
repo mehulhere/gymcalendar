@@ -63,26 +63,23 @@ export default function WorkoutPage() {
         }
     }, [accessToken])
     useEffect(() => {
-        fetchPlans()
         // Load session from local storage on component mount
         if (typeof window !== 'undefined') {
             const savedSession = localStorage.getItem(LOCAL_STORAGE_KEY)
             if (savedSession) {
                 try {
                     const parsedSession = JSON.parse(savedSession)
-                    // Validate if the session is still active (e.g., from today or recent)
-                    // For simplicity, we'll just load it. More robust validation could be added.
                     setActiveSession(parsedSession.activeSession)
                     setSessionData(parsedSession.sessionData)
                     setSelectedPlan(parsedSession.activeSession.planId)
                     setSelectedDay(parsedSession.activeSession.planDayId)
                 } catch (error) {
-                    console.error("Failed to parse saved session from local storage", error)
-                    localStorage.removeItem(LOCAL_STORAGE_KEY) // Clear invalid data
+                    console.error('Failed to parse saved session from local storage', error)
+                    localStorage.removeItem(LOCAL_STORAGE_KEY)
                 }
             }
         }
-    }, [fetchPlans])
+    }, [])
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -94,11 +91,10 @@ export default function WorkoutPage() {
         }
     }, [activeSession, sessionData])
 
-
-
     useEffect(() => {
+        if (!accessToken) return
         fetchPlans()
-    }, [fetchPlans])
+    }, [accessToken, fetchPlans])
 
     const startWorkout = async () => {
         if (!selectedPlan || !selectedDay) {

@@ -27,6 +27,7 @@ export default function SignupPage() {
             const response = await fetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ name, email, password }),
             })
 
@@ -122,5 +123,4 @@ export default function SignupPage() {
         </div>
     )
 }
-
 

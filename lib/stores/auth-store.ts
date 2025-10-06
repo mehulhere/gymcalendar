@@ -59,7 +59,14 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       onRehydrateStorage: () => (_state, _error) => {
-        storeRef?.setState({ hasHydrated: true, hasAttemptedRestore: false })
+        storeRef?.setState({
+          hasHydrated: true,
+          hasAttemptedRestore: false,
+          isAuthenticated: false,
+          accessToken: null,
+          user: null,
+          isRestoring: false,
+        })
       },
     }
   )

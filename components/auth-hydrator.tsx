@@ -56,6 +56,7 @@ export function AuthHydrator() {
   }, [
     hasHydrated,
     hasAttemptedRestore,
+    isRestoring,
     login,
     logout,
     setIsRestoring,
