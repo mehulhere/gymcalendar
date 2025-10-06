@@ -126,15 +126,10 @@ export default function ProfilePage() {
         setMounted(true)
     }, [])
 
+    // Avoid imperative redirects here; we'll render a small message instead
     useEffect(() => {
-        if (!hasHydrated || isRestoring || !hasAttemptedRestore) {
-            return
-        }
-
-        if (!isAuthenticated) {
-            router.push('/auth/login')
-        }
-    }, [hasHydrated, hasAttemptedRestore, isAuthenticated, isRestoring, router])
+        // keep for any side effects in future
+    }, [])
 
     useEffect(() => {
         if (!isAuthenticated || !accessToken || isRestoring || !hasAttemptedRestore) {
@@ -269,8 +264,23 @@ export default function ProfilePage() {
         ? weighIns[0].weight - weighIns[1].weight
         : 0
 
-    if (!hasHydrated || isRestoring || !hasAttemptedRestore || !isAuthenticated) {
-        return null
+    if (isRestoring) {
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 text-muted-foreground">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm font-medium">Preparing your profile...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 text-muted-foreground">
+                <p className="text-sm font-medium">Redirecting to login...</p>
+            </div>
+        )
     }
 
     return (

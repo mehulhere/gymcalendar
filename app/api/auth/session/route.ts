@@ -9,8 +9,11 @@ export async function GET() {
 
     if (!refreshToken) {
       return NextResponse.json(
-        { error: 'No refresh token found' },
-        { status: 401 }
+        {
+          accessToken: null,
+          user: null,
+          authenticated: false,
+        }
       )
     }
 
@@ -56,4 +59,3 @@ export async function GET() {
     )
   }
 }
-

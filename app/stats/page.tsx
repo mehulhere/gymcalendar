@@ -30,7 +30,11 @@ interface WeighIn {
 }
 
 export default function StatsPage() {
-    const { accessToken } = useAuthStore()
+    const accessToken = useAuthStore((state) => state.accessToken)
+    const hasAttemptedRestore = useAuthStore((state) => state.hasAttemptedRestore)
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+    const hasHydrated = useAuthStore((state) => state.hasHydrated)
+    const isRestoring = useAuthStore((state) => state.isRestoring)
     const router = useRouter()
     const [volumeData, setVolumeData] = useState<VolumeData>({
         totalVolume: 0,
@@ -80,6 +84,18 @@ export default function StatsPage() {
             setIsLoadingProgress(false)
         }
     }, [])
+
+    useEffect(() => {
+        if (!hasAttemptedRestore) {
+            return
+        }
+
+        if (!accessToken || !isAuthenticated) {
+            setIsLoading(false)
+            setIsLoadingExercises(false)
+            setIsLoadingProgress(false)
+        }
+    }, [accessToken, hasAttemptedRestore, isAuthenticated])
 
     const calculateVolumes = useCallback((sessions: any[]) => {
         let totalVolume = 0
@@ -312,6 +328,25 @@ export default function StatsPage() {
             badge: 'bg-muted text-muted-foreground',
             label: 'No change',
         }
+    }
+
+    if (isRestoring) {
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 text-muted-foreground">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm font-medium">Loading your stats...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 text-muted-foreground">
+                <p className="text-sm font-medium">Sign in to see your stats.</p>
+            </div>
+        )
     }
 
     return (

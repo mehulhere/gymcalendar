@@ -34,7 +34,11 @@ interface Plan {
 
 export default function WorkoutPage() {
     const router = useRouter()
-    const { accessToken } = useAuthStore()
+    const accessToken = useAuthStore((state) => state.accessToken)
+    const hasAttemptedRestore = useAuthStore((state) => state.hasAttemptedRestore)
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+    const hasHydrated = useAuthStore((state) => state.hasHydrated)
+    const isRestoring = useAuthStore((state) => state.isRestoring)
     const { toast } = useToast()
     const [plans, setPlans] = useState<Plan[]>([])
     const [selectedPlan, setSelectedPlan] = useState<string>('')
@@ -55,6 +59,20 @@ export default function WorkoutPage() {
             }
         }
     }, [])
+
+    useEffect(() => {
+        if (!hasAttemptedRestore) {
+            return
+        }
+
+        if (!accessToken || !isAuthenticated) {
+            setPlans([])
+            setSelectedPlan('')
+            setSelectedDay('')
+            setActiveSession(null)
+            setSessionData(null)
+        }
+    }, [accessToken, hasAttemptedRestore, isAuthenticated])
 
     const fetchPlans = useCallback(async () => {
         try {
@@ -398,6 +416,25 @@ export default function WorkoutPage() {
                     </div>
                 </div>
                 <BottomNav />
+            </div>
+        )
+    }
+
+    if (isRestoring) {
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 text-muted-foreground">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm font-medium">Loading your workout...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 text-muted-foreground">
+                <p className="text-sm font-medium">Sign in to start a workout.</p>
             </div>
         )
     }

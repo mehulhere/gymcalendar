@@ -54,15 +54,8 @@ export function CalendarView() {
         }
     }, [])
 
-    useEffect(() => {
-        if (!hasHydrated || isRestoring || !hasAttemptedRestore) {
-            return
-        }
-
-        if (!isAuthenticated) {
-            router.push('/auth/login')
-        }
-    }, [hasHydrated, hasAttemptedRestore, isAuthenticated, isRestoring, router])
+    // Do not imperatively redirect here to avoid render loops.
+    // We conditionally render a message when unauthenticated instead.
 
     const fetchUserSettings = useCallback(async () => {
         try {
@@ -112,29 +105,32 @@ export function CalendarView() {
     }, [accessToken])
 
     useEffect(() => {
-        if (!hasAttemptedRestore || isRestoring) {
+        if (isRestoring || !hasHydrated) {
             return
         }
-
         if (isAuthenticated && accessToken) {
             fetchCalendarData()
             fetchUserSettings()
         }
-    }, [
-        isAuthenticated,
-        accessToken,
-        hasAttemptedRestore,
-        isRestoring,
-        fetchCalendarData,
-        fetchUserSettings,
-    ])
+    }, [isAuthenticated, accessToken, hasHydrated, isRestoring, fetchCalendarData, fetchUserSettings])
 
-    if (!hasHydrated || isRestoring || !hasAttemptedRestore) {
-        return null
+    if (isRestoring) {
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 text-muted-foreground">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm font-medium">Loading your schedule...</p>
+                </div>
+            </div>
+        )
     }
 
     if (!isAuthenticated) {
-        return null
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 text-muted-foreground">
+                <p className="text-sm font-medium">Redirecting to login...</p>
+            </div>
+        )
     }
 
     if (showTargetModal) {
