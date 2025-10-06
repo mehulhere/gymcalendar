@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import type { ExerciseSummary } from '@/lib/stats/exercise-performance'
 import type { ProgressSummaryItem } from '@/lib/stats/progress'
+import { readCache, writeCache } from '@/lib/utils/cache'
 
 interface VolumeData {
     totalVolume: number
@@ -50,6 +51,36 @@ export default function StatsPage() {
     const [isLoadingProgress, setIsLoadingProgress] = useState<boolean>(true)
     const [progressError, setProgressError] = useState<string | null>(null)
 
+    useEffect(() => {
+        const cachedVolume = readCache<VolumeData>('stats:volumeData')
+        if (cachedVolume) {
+            setVolumeData(cachedVolume.value)
+            setIsLoading(false)
+        }
+
+        const cachedWeighIns = readCache<WeighIn[]>('user:weighIns')
+        if (cachedWeighIns) {
+            setWeighIns(cachedWeighIns.value)
+        }
+
+        const cachedSettings = readCache<any>('user:settings')
+        if (cachedSettings) {
+            setUserSettings(cachedSettings.value)
+        }
+
+        const cachedExercises = readCache<ExerciseSummary[]>('stats:exerciseSummaries')
+        if (cachedExercises) {
+            setExerciseSummaries(cachedExercises.value)
+            setIsLoadingExercises(false)
+        }
+
+        const cachedProgress = readCache<{ weekly: ProgressSummaryItem, monthly: ProgressSummaryItem }>('stats:progressOverview')
+        if (cachedProgress) {
+            setProgressOverview(cachedProgress.value)
+            setIsLoadingProgress(false)
+        }
+    }, [])
+
     const calculateVolumes = useCallback((sessions: any[]) => {
         let totalVolume = 0
         const muscleVolumes: Record<string, number> = {}
@@ -84,14 +115,17 @@ export default function StatsPage() {
 
         console.log('Calculated volume:', { totalVolume, muscleVolumes, muscleSets, workoutCount, sessions })
 
-        setVolumeData({
+        const calculatedVolume: VolumeData = {
             totalVolume,
             weeklyVolume: totalVolume,
             muscleVolumes,
             muscleSets,
             workoutCount,
             streak: 0, // Would calculate from attendance
-        })
+        }
+
+        setVolumeData(calculatedVolume)
+        writeCache('stats:volumeData', calculatedVolume)
     }, [])
 
     const fetchUserSettings = useCallback(async () => {
@@ -102,6 +136,7 @@ export default function StatsPage() {
             if (response.ok) {
                 const data = await response.json()
                 setUserSettings(data.settings)
+                writeCache('user:settings', data.settings)
             }
         } catch (error) {
             console.error('Failed to fetch user settings:', error)
@@ -141,6 +176,7 @@ export default function StatsPage() {
             if (response.ok) {
                 const data = await response.json()
                 setWeighIns(data.weighIns || [])
+                writeCache('user:weighIns', data.weighIns || [])
             }
         } catch (error) {
             console.error('Failed to fetch weigh-ins:', error)
@@ -158,6 +194,7 @@ export default function StatsPage() {
             if (response.ok) {
                 const data = await response.json()
                 setExerciseSummaries(data.exercises || [])
+                writeCache('stats:exerciseSummaries', data.exercises || [])
             } else {
                 const errorData = await response.json().catch(() => null)
                 setExerciseError(errorData?.error || 'Unable to load exercises')
@@ -181,6 +218,7 @@ export default function StatsPage() {
             if (response.ok) {
                 const data = await response.json()
                 setProgressOverview(data)
+                writeCache('stats:progressOverview', data)
             } else {
                 const errorData = await response.json().catch(() => null)
                 setProgressError(errorData?.error || 'Unable to load progress overview')

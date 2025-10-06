@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { useToast } from '@/components/ui/use-toast'
 import { Plus, Play, Edit, Trash2, CheckCircle2, Sparkles, Dumbbell } from 'lucide-react'
+import { readCache, writeCache } from '@/lib/utils/cache'
 
 interface Plan {
     _id: string
@@ -27,6 +28,14 @@ export default function PlansPage() {
     const [plans, setPlans] = useState<Plan[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
+    useEffect(() => {
+        const cachedPlans = readCache<Plan[]>('plans:list')
+        if (cachedPlans) {
+            setPlans(cachedPlans.value)
+            setIsLoading(false)
+        }
+    }, [])
+
     const fetchPlans = useCallback(async () => {
         try {
             const response = await fetch('/api/plans', {
@@ -38,6 +47,7 @@ export default function PlansPage() {
             if (response.ok) {
                 const data = await response.json()
                 setPlans(data.plans || [])
+                writeCache('plans:list', data.plans || [])
             }
         } catch (error) {
             console.error('Failed to fetch plans:', error)

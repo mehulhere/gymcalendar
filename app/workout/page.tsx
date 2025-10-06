@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { Play, Check, Youtube, Shuffle, ChevronLeft, Sparkles } from 'lucide-react'
 import { WorkoutMascot } from '@/components/workout/workout-mascot'
 import { openYouTubeExercise } from '@/lib/youtube'
+import { readCache, writeCache } from '@/lib/utils/cache'
 
 interface ExerciseRef { _id: string; name: string }
 interface Plan {
@@ -44,6 +45,17 @@ export default function WorkoutPage() {
 
     const LOCAL_STORAGE_KEY = 'activeWorkoutSession'
 
+    useEffect(() => {
+        const cachedPlans = readCache<Plan[]>('plans:list')
+        if (cachedPlans) {
+            setPlans(cachedPlans.value)
+            const activePlan = cachedPlans.value.find((plan) => plan.isActive)
+            if (activePlan) {
+                setSelectedPlan(activePlan._id)
+            }
+        }
+    }, [])
+
     const fetchPlans = useCallback(async () => {
         try {
             const response = await fetch('/api/plans', {
@@ -52,6 +64,7 @@ export default function WorkoutPage() {
             if (response.ok) {
                 const data = await response.json()
                 setPlans(data.plans || [])
+                writeCache('plans:list', data.plans || [])
                 // Auto-select active plan
                 const activePlan = data.plans.find((p: Plan) => p.isActive)
                 if (activePlan) {

@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { useTheme } from 'next-themes'
 import { Weight, Target, LogOut, Save, Edit2, X, Check, Sun, Moon, Monitor } from 'lucide-react'
+import { readCache, writeCache } from '@/lib/utils/cache'
 
 interface WeighIn {
     _id: string
@@ -47,6 +48,29 @@ export default function ProfilePage() {
     const [targetDays, setTargetDays] = useState('')
     const [mounted, setMounted] = useState(false)
 
+    useEffect(() => {
+        const cachedWeighIns = readCache<WeighIn[]>('user:weighIns')
+        if (cachedWeighIns) {
+            setWeighIns(cachedWeighIns.value)
+        }
+
+        const cachedGoals = readCache<Goal[]>('profile:goals')
+        if (cachedGoals) {
+            setGoals(cachedGoals.value)
+        }
+
+        const cachedSettings = readCache<any>('user:settings')
+        if (cachedSettings) {
+            setUserSettings(cachedSettings.value)
+            if (cachedSettings.value?.targetWeight) {
+                setTargetWeight(cachedSettings.value.targetWeight.toString())
+            }
+            if (cachedSettings.value?.targetDays) {
+                setTargetDays(cachedSettings.value.targetDays.toString())
+            }
+        }
+    }, [])
+
     const fetchWeighIns = useCallback(async () => {
         try {
             const response = await fetch('/api/weighins', {
@@ -55,6 +79,7 @@ export default function ProfilePage() {
             if (response.ok) {
                 const data = await response.json()
                 setWeighIns(data.weighIns || [])
+                writeCache('user:weighIns', data.weighIns || [])
             }
         } catch (error) {
             console.error('Failed to fetch weigh-ins:', error)
@@ -69,6 +94,7 @@ export default function ProfilePage() {
             if (response.ok) {
                 const data = await response.json()
                 setGoals(data.goals || [])
+                writeCache('profile:goals', data.goals || [])
             }
         } catch (error) {
             console.error('Failed to fetch goals:', error)
@@ -83,6 +109,7 @@ export default function ProfilePage() {
             if (response.ok) {
                 const data = await response.json()
                 setUserSettings(data.settings)
+                writeCache('user:settings', data.settings)
                 if (data.settings.targetWeight) {
                     setTargetWeight(data.settings.targetWeight.toString())
                 }

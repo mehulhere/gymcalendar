@@ -11,6 +11,7 @@ import { TargetWeightModal } from '@/components/onboarding/target-weight-modal'
 import { useToast } from '@/components/ui/use-toast'
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon, Grid3x3 } from 'lucide-react'
+import { readCache, writeCache } from '@/lib/utils/cache'
 
 interface CalendarDay {
     date: string
@@ -39,6 +40,21 @@ export function CalendarView() {
     const [userSettings, setUserSettings] = useState<any>(null)
 
     useEffect(() => {
+        const cachedCalendar = readCache<CalendarDay[]>('calendar:data')
+        if (cachedCalendar) {
+            setCalendarData(cachedCalendar.value)
+        }
+
+        const cachedSettings = readCache<any>('user:settings')
+        if (cachedSettings) {
+            setUserSettings(cachedSettings.value)
+            if (!cachedSettings.value?.targetWeight || !cachedSettings.value?.targetDays) {
+                setShowTargetModal(true)
+            }
+        }
+    }, [])
+
+    useEffect(() => {
         if (!hasHydrated || isRestoring || !hasAttemptedRestore) {
             return
         }
@@ -59,10 +75,13 @@ export function CalendarView() {
             if (response.ok) {
                 const data = await response.json()
                 setUserSettings(data.settings)
+                writeCache('user:settings', data.settings)
 
                 // Show target weight modal if not set
                 if (!data.settings.targetWeight || !data.settings.targetDays) {
                     setShowTargetModal(true)
+                } else {
+                    setShowTargetModal(false)
                 }
             }
         } catch (error) {
@@ -83,6 +102,7 @@ export function CalendarView() {
             if (response.ok) {
                 const data = await response.json()
                 setCalendarData(data.calendar || [])
+                writeCache('calendar:data', data.calendar || [])
             }
         } catch (error) {
             console.error('Failed to fetch calendar data:', error)
