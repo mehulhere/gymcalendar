@@ -481,21 +481,6 @@ export default function ProfilePage() {
                                         <X className="h-4 w-4" />
                                     </Button>
                                 </div>
-                                <div className="flex items-center justify-between rounded-xl border p-3">
-                                    <div>
-                                        <Label className="text-sm font-semibold">Auto check-in on workout finish</Label>
-                                        <div className="text-xs text-muted-foreground">When off, finishing a workout won&apos;t mark attendance</div>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setAutoCheckIn(v => !v)}
-                                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${autoCheckIn ? 'bg-emerald-600' : 'bg-muted'}`}
-                                    >
-                                        <span
-                                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${autoCheckIn ? 'translate-x-6' : 'translate-x-1'}`}
-                                        />
-                                    </button>
-                                </div>
                             </div>
                         ) : userSettings?.targetWeight ? (
                             <div className="space-y-3">
@@ -542,21 +527,6 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                 )}
-                                <div className="flex items-center justify-between rounded-xl border p-3">
-                                    <div>
-                                        <Label className="text-sm font-semibold">Auto check-in on workout finish</Label>
-                                        <div className="text-xs text-muted-foreground">{userSettings?.autoCheckIn === false ? 'Disabled' : 'Enabled'}</div>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsEditingGoal(true)}
-                                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${(userSettings?.autoCheckIn ?? true) ? 'bg-emerald-600' : 'bg-muted'}`}
-                                    >
-                                        <span
-                                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${(userSettings?.autoCheckIn ?? true) ? 'translate-x-6' : 'translate-x-1'}`}
-                                        />
-                                    </button>
-                                </div>
                             </div>
                         ) : (
                             <div className="text-center py-4">
@@ -569,6 +539,53 @@ export default function ProfilePage() {
                                 </Button>
                             </div>
                         )}
+                    </CardContent>
+                </Card>
+
+                {/* Workout Preferences */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="flex items-center gap-2">
+                                Workout Preferences
+                            </CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <div className="flex items-center justify-between rounded-xl border p-3">
+                            <div>
+                                <Label className="text-sm font-semibold">Auto check-in on workout finish</Label>
+                                <div className="text-xs text-muted-foreground">When off, finishing a workout won&apos;t mark attendance</div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    const next = !autoCheckIn
+                                    setAutoCheckIn(next)
+                                    try {
+                                        const resp = await fetch('/api/user/settings', {
+                                            method: 'PATCH',
+                                            headers: {
+                                                'Authorization': `Bearer ${accessToken}`,
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ autoCheckIn: next }),
+                                        })
+                                        if (resp.ok) {
+                                            const curr = readCache<any>('user:settings')?.value || {}
+                                            writeCache('user:settings', { ...curr, autoCheckIn: next })
+                                        }
+                                    } catch (e) {
+                                        // no-op
+                                    }
+                                }}
+                                className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${autoCheckIn ? 'bg-emerald-600' : 'bg-muted'}`}
+                            >
+                                <span
+                                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${autoCheckIn ? 'translate-x-6' : 'translate-x-1'}`}
+                                />
+                            </button>
+                        </div>
                     </CardContent>
                 </Card>
 
