@@ -48,6 +48,7 @@ export default function ProfilePage() {
     const [targetDays, setTargetDays] = useState('')
     const [mounted, setMounted] = useState(false)
     const [weeklyTargetDays, setWeeklyTargetDays] = useState('')
+    const [autoCheckIn, setAutoCheckIn] = useState(true)
 
     useEffect(() => {
         const cachedWeighIns = readCache<WeighIn[]>('user:weighIns')
@@ -71,6 +72,9 @@ export default function ProfilePage() {
             }
             if (cachedSettings.value?.weeklyTargetDays) {
                 setWeeklyTargetDays(cachedSettings.value.weeklyTargetDays.toString())
+            }
+            if (cachedSettings.value?.autoCheckIn !== undefined) {
+                setAutoCheckIn(!!cachedSettings.value.autoCheckIn)
             }
         }
     }, [])
@@ -122,6 +126,9 @@ export default function ProfilePage() {
                 }
                 if (data.settings.weeklyTargetDays) {
                     setWeeklyTargetDays(data.settings.weeklyTargetDays.toString())
+                }
+                if (data.settings.autoCheckIn !== undefined) {
+                    setAutoCheckIn(!!data.settings.autoCheckIn)
                 }
             }
         } catch (error) {
@@ -190,6 +197,7 @@ export default function ProfilePage() {
                     targetWeight: weight,
                     targetDays: days,
                     weeklyTargetDays: weekly,
+                    autoCheckIn,
                 }),
             })
 
@@ -473,6 +481,21 @@ export default function ProfilePage() {
                                         <X className="h-4 w-4" />
                                     </Button>
                                 </div>
+                                <div className="flex items-center justify-between rounded-xl border p-3">
+                                    <div>
+                                        <Label className="text-sm font-semibold">Auto check-in on workout finish</Label>
+                                        <div className="text-xs text-muted-foreground">When off, finishing a workout won&apos;t mark attendance</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setAutoCheckIn(v => !v)}
+                                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${autoCheckIn ? 'bg-emerald-600' : 'bg-muted'}`}
+                                    >
+                                        <span
+                                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${autoCheckIn ? 'translate-x-6' : 'translate-x-1'}`}
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         ) : userSettings?.targetWeight ? (
                             <div className="space-y-3">
@@ -519,6 +542,21 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                 )}
+                                <div className="flex items-center justify-between rounded-xl border p-3">
+                                    <div>
+                                        <Label className="text-sm font-semibold">Auto check-in on workout finish</Label>
+                                        <div className="text-xs text-muted-foreground">{userSettings?.autoCheckIn === false ? 'Disabled' : 'Enabled'}</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditingGoal(true)}
+                                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${(userSettings?.autoCheckIn ?? true) ? 'bg-emerald-600' : 'bg-muted'}`}
+                                    >
+                                        <span
+                                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${(userSettings?.autoCheckIn ?? true) ? 'translate-x-6' : 'translate-x-1'}`}
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <div className="text-center py-4">

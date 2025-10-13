@@ -6,6 +6,7 @@ import { Attendance } from '@/lib/models/Attendance'
 import { withAuth, AuthenticatedRequest } from '@/lib/auth-middleware'
 import mongoose from 'mongoose'
 import { getStartOfDayUtcForZone } from '@/lib/utils/time'
+import { User } from '@/lib/models/User'
 
 const finishSessionSchema = z.object({
   checkIn: z.boolean().default(true),
@@ -59,8 +60,17 @@ async function finishSession(
 
     await session.save()
 
+    // Respect user setting for auto check-in
+    let allowCheckIn = data.checkIn
+    try {
+      const me = await User.findById(req.user!.userId).select('settings.autoCheckIn')
+      if (me && me.settings && me.settings.autoCheckIn === false) {
+        allowCheckIn = false
+      }
+    } catch {}
+
     // Create or update attendance record
-    if (data.checkIn) {
+    if (allowCheckIn) {
       const userTz = data.timeZone || 'UTC'
       const sessionDateUtc = getStartOfDayUtcForZone(new Date(session.date), userTz)
 

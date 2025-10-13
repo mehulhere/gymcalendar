@@ -20,6 +20,7 @@ export interface IUser {
     targetWeight?: number
     targetDays?: number
     weeklyTargetDays?: number
+    autoCheckIn?: boolean
   }
   createdAt: Date
   updatedAt: Date
@@ -71,6 +72,10 @@ const UserSchema = new Schema<IUser>({
       type: String,
       enum: ['light', 'dark', 'system'],
       default: 'dark'
+    },
+    autoCheckIn: {
+      type: Boolean,
+      default: true
     },
     bodyWeight: Number,
     height: Number,
