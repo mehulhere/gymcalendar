@@ -58,6 +58,7 @@ const exercises = [
   { name: 'Front Raises', aliases: ['Front Delt Raise'], equipment: 'dumbbell', primary_muscles: ['Front Delts'], secondary_muscles: [], category: 'push' },
   { name: 'Rear Delt Flyes', aliases: ['Reverse Flyes', 'Bent Over Flyes'], equipment: 'dumbbell', primary_muscles: ['Rear Delts'], secondary_muscles: ['Upper Back'], category: 'pull' },
   { name: 'Cable Rear Delt Flyes', aliases: ['Cable Reverse Flyes'], equipment: 'cable', primary_muscles: ['Rear Delts'], secondary_muscles: [], category: 'pull' },
+  { name: 'Cable Y-Raise', aliases: ['Cable Y Raise', 'Y-Raise', 'Y Raise', 'Y Fly'], equipment: 'cable', primary_muscles: ['Rear Delts', 'Upper Back'], secondary_muscles: [], category: 'pull' },
   { name: 'Upright Row', aliases: ['Barbell Upright Row'], equipment: 'barbell', primary_muscles: ['Side Delts', 'Traps'], secondary_muscles: [], category: 'pull' },
   { name: 'Dumbbell Upright Row', aliases: ['DB Upright Row'], equipment: 'dumbbell', primary_muscles: ['Side Delts', 'Traps'], secondary_muscles: [], category: 'pull' },
   { name: 'Machine Shoulder Press', aliases: ['Shoulder Press Machine'], equipment: 'machine', primary_muscles: ['Front Delts'], secondary_muscles: ['Triceps'], category: 'push' },
@@ -85,6 +86,7 @@ const exercises = [
   { name: 'Skull Crushers', aliases: ['Lying Tricep Extension', 'EZ Bar Skull Crusher'], equipment: 'barbell', primary_muscles: ['Triceps'], secondary_muscles: [], category: 'push' },
   { name: 'Overhead Tricep Extension', aliases: ['French Press'], equipment: 'dumbbell', primary_muscles: ['Triceps'], secondary_muscles: [], category: 'push' },
   { name: 'Cable Pushdown', aliases: ['Tricep Pushdown'], equipment: 'cable', primary_muscles: ['Triceps'], secondary_muscles: [], category: 'push' },
+  { name: 'Reverse Grip Pushdown', aliases: ['Reverse Grip Cable Pushdown', 'Reverse Grip Tricep Pushdown', 'Underhand Pushdown', 'Supinated Pushdown'], equipment: 'cable', primary_muscles: ['Triceps'], secondary_muscles: [], category: 'push' },
   { name: 'Rope Pushdown', aliases: ['Cable Rope Pushdown'], equipment: 'cable', primary_muscles: ['Triceps'], secondary_muscles: [], category: 'push' },
   { name: 'Dumbbell Kickback', aliases: ['Tricep Kickback'], equipment: 'dumbbell', primary_muscles: ['Triceps'], secondary_muscles: [], category: 'push' },
   { name: 'Overhead Cable Extension', aliases: ['Cable Tricep Extension'], equipment: 'cable', primary_muscles: ['Triceps'], secondary_muscles: [], category: 'push' },
@@ -223,16 +225,21 @@ export async function seedExercises() {
   try {
     await dbConnect()
     
-    const count = await Exercise.countDocuments()
-    
-    if (count > 0) {
-      console.log(`Database already has ${count} exercises. Skipping seed.`)
-      return
+    console.log('Seeding exercises (idempotent upsert)...')
+    let inserted = 0
+    for (const ex of exercises) {
+      const res = await Exercise.updateOne(
+        { name: ex.name },
+        { $setOnInsert: ex },
+        { upsert: true }
+      )
+      // When upserted, Mongo returns upsertedCount in acknowledged write models (not here),
+      // but matchedCount === 0 and modifiedCount === 0 implies an upsert occurred.
+      if ((res as any).upsertedCount === 1 || ((res.matchedCount === 0) && (res.modifiedCount === 0))) {
+        inserted += 1
+      }
     }
-
-    console.log('Seeding exercises...')
-    await Exercise.insertMany(exercises)
-    console.log(`Successfully seeded ${exercises.length} exercises`)
+    console.log(`Seed completed. Inserted ${inserted} new exercises. Total catalog size: ${exercises.length}`)
   } catch (error) {
     console.error('Error seeding exercises:', error)
     throw error

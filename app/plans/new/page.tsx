@@ -30,7 +30,7 @@ export default function NewPlanPage() {
     const { toast } = useToast()
 
     const [planName, setPlanName] = useState('')
-    const [sessionsPerWeek, setSessionsPerWeek] = useState(3)
+    // sessionsPerWeek removed; sequencing uses number of days in plan
     const [weekdayMode, setWeekdayMode] = useState(false)
     const [days, setDays] = useState<PlanDay[]>([
         { name: 'Day 1', exercises: [] }
@@ -182,7 +182,7 @@ export default function NewPlanPage() {
                 },
                 body: JSON.stringify({
                     name: planName,
-                    sessionsPerWeek,
+                    sessionsPerWeek: days.length,
                     schedule: {
                         mode: weekdayMode ? 'weekday' : 'sequence',
                         weekdayMap: weekdayMode ? weekdayMap : undefined,
@@ -245,18 +245,7 @@ export default function NewPlanPage() {
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="sessionsPerWeek">Sessions Per Week</Label>
-                            <Input
-                                id="sessionsPerWeek"
-                                type="number"
-                                min="1"
-                                max="7"
-                                value={sessionsPerWeek}
-                                onChange={(e) => setSessionsPerWeek(parseInt(e.target.value) || 1)}
-                                className="touch-target"
-                            />
-                        </div>
+                        {/* Sessions per week removed - sequential plans rotate days automatically */}
 
                         <div className="flex items-center justify-between p-4 border rounded-lg">
                             <div className="space-y-1">

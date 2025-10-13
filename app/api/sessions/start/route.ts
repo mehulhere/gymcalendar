@@ -4,11 +4,13 @@ import dbConnect from '@/lib/db'
 import { Session } from '@/lib/models/Session'
 import { Plan } from '@/lib/models/Plan'
 import { withAuth, AuthenticatedRequest } from '@/lib/auth-middleware'
+import { getStartOfDayUtcForZone } from '@/lib/utils/time'
 
 const startSessionSchema = z.object({
   planId: z.string().optional(),
   planDayId: z.string().optional(),
   date: z.string().optional(), // ISO date string
+  timeZone: z.string().optional(), // IANA time zone
 })
 
 // POST /api/sessions/start
@@ -43,9 +45,13 @@ async function startSession(req: AuthenticatedRequest) {
       }
     }
 
+    const userTz = data.timeZone || 'UTC'
+    const chosenDate = data.date ? new Date(data.date) : new Date()
+    const sessionDateUtc = getStartOfDayUtcForZone(chosenDate, userTz)
+
     const session = await Session.create({
       userId: req.user!.userId,
-      date: data.date ? new Date(data.date) : new Date(),
+      date: sessionDateUtc,
       planId: data.planId,
       planDayId: data.planDayId,
       status: 'in_progress',

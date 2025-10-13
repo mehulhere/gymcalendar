@@ -10,7 +10,7 @@ import { useAuthStore } from '@/lib/stores/auth-store'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { useTheme } from 'next-themes'
-import { Weight, Target, LogOut, Save, Edit2, X, Check, Sun, Moon, Monitor } from 'lucide-react'
+import { Weight, Target, LogOut, Save, Edit2, X, Check, Sun, Moon, Monitor, RotateCcw } from 'lucide-react'
 import { readCache, writeCache } from '@/lib/utils/cache'
 
 interface WeighIn {
@@ -47,6 +47,7 @@ export default function ProfilePage() {
     const [targetWeight, setTargetWeight] = useState('')
     const [targetDays, setTargetDays] = useState('')
     const [mounted, setMounted] = useState(false)
+    const [weeklyTargetDays, setWeeklyTargetDays] = useState('')
 
     useEffect(() => {
         const cachedWeighIns = readCache<WeighIn[]>('user:weighIns')
@@ -67,6 +68,9 @@ export default function ProfilePage() {
             }
             if (cachedSettings.value?.targetDays) {
                 setTargetDays(cachedSettings.value.targetDays.toString())
+            }
+            if (cachedSettings.value?.weeklyTargetDays) {
+                setWeeklyTargetDays(cachedSettings.value.weeklyTargetDays.toString())
             }
         }
     }, [])
@@ -116,6 +120,9 @@ export default function ProfilePage() {
                 if (data.settings.targetDays) {
                     setTargetDays(data.settings.targetDays.toString())
                 }
+                if (data.settings.weeklyTargetDays) {
+                    setWeeklyTargetDays(data.settings.weeklyTargetDays.toString())
+                }
             }
         } catch (error) {
             console.error('Failed to fetch user settings:', error)
@@ -152,6 +159,7 @@ export default function ProfilePage() {
     const updateTargetGoal = async () => {
         const weight = parseFloat(targetWeight)
         const days = parseInt(targetDays)
+        const weekly = weeklyTargetDays ? parseInt(weeklyTargetDays) : undefined
 
         if (!weight || weight <= 0) {
             toast({
@@ -181,6 +189,7 @@ export default function ProfilePage() {
                 body: JSON.stringify({
                     targetWeight: weight,
                     targetDays: days,
+                    weeklyTargetDays: weekly,
                 }),
             })
 
@@ -197,6 +206,20 @@ export default function ProfilePage() {
                 description: 'Failed to update target goal',
                 variant: 'destructive',
             })
+        }
+    }
+
+    const resetAllCheckins = async () => {
+        if (!confirm('Are you sure you want to reset all check-ins? This cannot be undone.')) return
+        try {
+            const res = await fetch('/api/attendance/reset', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            })
+            if (!res.ok) throw new Error('Failed')
+            toast({ title: 'All check-ins reset' })
+        } catch (e) {
+            toast({ title: 'Error', description: 'Failed to reset check-ins', variant: 'destructive' })
         }
     }
 
@@ -411,6 +434,18 @@ export default function ProfilePage() {
                                         onChange={(e) => setTargetDays(e.target.value)}
                                     />
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="weeklyTargetDays">Workouts per week</Label>
+                                    <Input
+                                        id="weeklyTargetDays"
+                                        type="number"
+                                        min={1}
+                                        max={7}
+                                        placeholder="3"
+                                        value={weeklyTargetDays}
+                                        onChange={(e) => setWeeklyTargetDays(e.target.value)}
+                                    />
+                                </div>
                                 <div className="flex gap-2">
                                     <Button
                                         className="flex-1"
@@ -430,6 +465,9 @@ export default function ProfilePage() {
                                             if (userSettings?.targetDays) {
                                                 setTargetDays(userSettings.targetDays.toString())
                                             }
+                                            if (userSettings?.weeklyTargetDays) {
+                                                setWeeklyTargetDays(userSettings.weeklyTargetDays.toString())
+                                            }
                                         }}
                                     >
                                         <X className="h-4 w-4" />
@@ -441,8 +479,11 @@ export default function ProfilePage() {
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-3xl font-bold">{userSettings.targetWeight} kg</span>
                                 </div>
-                                <div className="text-sm text-muted-foreground">
-                                    {userSettings.targetDays} days goal
+                                <div className="text-sm text-muted-foreground flex flex-wrap gap-2">
+                                    <span>{userSettings.targetDays} days goal</span>
+                                    {userSettings.weeklyTargetDays && (
+                                        <span>• {userSettings.weeklyTargetDays} workouts/week</span>
+                                    )}
                                 </div>
                                 {latestWeight && (
                                     <div className="space-y-2 pt-2">
@@ -551,15 +592,25 @@ export default function ProfilePage() {
                     </Card>
                 </div>
 
-                {/* Logout Button - Enhanced */}
-                <Button
-                    variant="destructive"
-                    className="w-full touch-target-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 text-white shadow-lg hover:shadow-red-500/30 transition-all"
-                    onClick={handleLogout}
-                >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                </Button>
+                {/* Reset / Logout Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                    <Button
+                        variant="secondary"
+                        className="w-full touch-target-lg"
+                        onClick={resetAllCheckins}
+                    >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Reset Check-ins
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        className="w-full touch-target-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 text-white shadow-lg hover:shadow-red-500/30 transition-all"
+                        onClick={handleLogout}
+                    >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                    </Button>
+                </div>
             </div>
 
             <BottomNav />

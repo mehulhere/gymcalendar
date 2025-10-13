@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { useToast } from '@/components/ui/use-toast'
-import { Play, Check, Youtube, Shuffle, ChevronLeft, Sparkles } from 'lucide-react'
+import { Play, Check, Youtube, Shuffle, ChevronLeft, Sparkles, Image as ImageIcon } from 'lucide-react'
 import { WorkoutMascot } from '@/components/workout/workout-mascot'
 import { openYouTubeExercise } from '@/lib/youtube'
 import { readCache, writeCache } from '@/lib/utils/cache'
@@ -149,6 +149,7 @@ export default function WorkoutPage() {
                     planId: selectedPlan,
                     planDayId: selectedDay,
                     date: new Date().toISOString(),
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 }),
             })
 
@@ -218,7 +219,7 @@ export default function WorkoutPage() {
                     'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ checkIn: true }),
+                body: JSON.stringify({ checkIn: true, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
             })
 
             if (response.ok) {
@@ -270,6 +271,18 @@ export default function WorkoutPage() {
         } catch (e) {
             console.error('Alternate switch failed', e)
             toast({ title: 'Error', description: 'Failed to load alternate', variant: 'destructive' })
+        }
+    }
+
+    const openMuscleImages = (exercise: any) => {
+        const primary = exercise?.exerciseId?.primary_muscles?.[0]
+        const phrase = (typeof primary === 'string' && primary.length > 0)
+            ? primary.toLowerCase()
+            : (exercise?.exerciseId?.name || 'muscle')
+        const query = `gym '${phrase}' muscle`
+        const url = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`
+        if (typeof window !== 'undefined') {
+            window.open(url, '_blank', 'noopener,noreferrer')
         }
     }
 
@@ -331,6 +344,14 @@ export default function WorkoutPage() {
                                                     className="hover:bg-red-500/10 text-red-500"
                                                 >
                                                     <Youtube className="h-5 w-5" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => openMuscleImages(exercise)}
+                                                    className="ml-1 hover:bg-emerald-500/10 text-emerald-500"
+                                                >
+                                                    <ImageIcon className="h-5 w-5" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"

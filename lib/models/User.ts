@@ -19,6 +19,7 @@ export interface IUser {
     height?: number
     targetWeight?: number
     targetDays?: number
+    weeklyTargetDays?: number
   }
   createdAt: Date
   updatedAt: Date
@@ -74,7 +75,8 @@ const UserSchema = new Schema<IUser>({
     bodyWeight: Number,
     height: Number,
     targetWeight: Number,
-    targetDays: Number
+    targetDays: Number,
+    weeklyTargetDays: Number
   }
 }, {
   timestamps: true

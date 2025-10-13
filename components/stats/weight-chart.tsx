@@ -37,6 +37,12 @@ export function WeightChart({ weighIns, targetWeight }: WeightChartProps) {
 
         const range = maxWeight - minWeight || 1
 
+        // Weekly target trend calculation: average weekly change from first to last entry
+        const firstDate = new Date(sorted[0].date)
+        const lastDate = new Date(sorted[sorted.length - 1].date)
+        const totalWeeks = Math.max(1, (lastDate.getTime() - firstDate.getTime()) / (7 * 24 * 60 * 60 * 1000))
+        const weeklyDelta = (sorted[sorted.length - 1].weight - sorted[0].weight) / totalWeeks
+
         return {
             sorted,
             actualMinWeight,
@@ -44,6 +50,8 @@ export function WeightChart({ weighIns, targetWeight }: WeightChartProps) {
             minWeight: minWeight - 1,
             maxWeight: maxWeight + 1,
             range: range + 2,
+            weeklyDelta,
+            firstDate,
         }
     }, [weighIns, targetWeight])
 
@@ -55,7 +63,7 @@ export function WeightChart({ weighIns, targetWeight }: WeightChartProps) {
         )
     }
 
-    const { sorted, actualMinWeight, actualMaxWeight, minWeight, maxWeight, range } = chartData
+    const { sorted, actualMinWeight, actualMaxWeight, minWeight, maxWeight, range, weeklyDelta, firstDate } = chartData
     const width = 600
     const height = 200
     const padding = { top: 20, right: 40, bottom: 40, left: 40 }
@@ -81,6 +89,17 @@ export function WeightChart({ weighIns, targetWeight }: WeightChartProps) {
     const targetY = targetWeight
         ? padding.top + chartHeight - ((targetWeight - minWeight) / range) * chartHeight
         : null
+
+    // Weekly target dashed trend line (based on average weekly change)
+    const targetTrendPoints = points.map((p) => {
+        const weeksSinceStart = (new Date(p.weighIn.date).getTime() - firstDate.getTime()) / (7 * 24 * 60 * 60 * 1000)
+        const projected = sorted[0].weight + weeklyDelta * weeksSinceStart
+        const y = padding.top + chartHeight - ((projected - minWeight) / range) * chartHeight
+        return { x: p.x, y }
+    })
+    const targetTrendPath = targetTrendPoints
+        .map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`)
+        .join(' ')
 
     return (
         <div className="w-full overflow-x-auto">
@@ -134,6 +153,20 @@ export function WeightChart({ weighIns, targetWeight }: WeightChartProps) {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                 />
+
+                {/* Weekly target trend (dotted) */}
+                {sorted.length > 1 && (
+                    <path
+                        d={targetTrendPath}
+                        fill="none"
+                        stroke="#f59e0b"
+                        strokeWidth="2"
+                        strokeDasharray="4 4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        opacity="0.9"
+                    />
+                )}
 
                 {/* Target weight line */}
                 {targetY !== null && (
@@ -264,6 +297,12 @@ export function WeightChart({ weighIns, targetWeight }: WeightChartProps) {
                     <div className="flex items-center gap-2">
                         <div className="w-6 h-0.5 bg-purple-500 border-dashed border-t-2 border-purple-500"></div>
                         <span className="text-muted-foreground">Target Weight</span>
+                    </div>
+                )}
+                {sorted.length > 1 && (
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-0.5 border-dashed border-t-2" style={{ borderColor: '#f59e0b' }}></div>
+                        <span className="text-muted-foreground">Weekly Target</span>
                     </div>
                 )}
             </div>

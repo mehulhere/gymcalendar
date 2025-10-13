@@ -9,7 +9,9 @@ import { ModernCalendar } from '@/components/calendar/modern-calendar'
 import { HeatmapCalendar } from '@/components/calendar/heatmap-calendar'
 import { TargetWeightModal } from '@/components/onboarding/target-weight-modal'
 import { useToast } from '@/components/ui/use-toast'
-import { format } from 'date-fns'
+import { format, startOfWeek, addDays } from 'date-fns'
+import { subMonths as subMonthsDate } from 'date-fns'
+import { isToday, isYesterday } from 'date-fns'
 import { Calendar as CalendarIcon, Grid3x3 } from 'lucide-react'
 import { readCache, writeCache } from '@/lib/utils/cache'
 
@@ -20,6 +22,8 @@ interface CalendarDay {
     sessionCount: number
     hasDoubleSession: boolean
 }
+
+type WeeklyHighlight = { weekStart: string; achieved: boolean }
 
 type ViewMode = 'month' | 'heatmap'
 
@@ -39,6 +43,10 @@ export function CalendarView() {
     const [showTargetModal, setShowTargetModal] = useState(false)
     const [userSettings, setUserSettings] = useState<any>(null)
     const [didRedirect, setDidRedirect] = useState(false)
+    const [weeklyHighlights, setWeeklyHighlights] = useState<WeeklyHighlight[]>([])
+    const [suggestedWeekHighlights, setSuggestedWeekHighlights] = useState<string[]>([])
+    const [goldenDots, setGoldenDots] = useState<string[]>([])
+    const [streakDays, setStreakDays] = useState<number>(0)
 
     useEffect(() => {
         const cachedCalendar = readCache<CalendarDay[]>('calendar:data')
@@ -49,7 +57,7 @@ export function CalendarView() {
         const cachedSettings = readCache<any>('user:settings')
         if (cachedSettings) {
             setUserSettings(cachedSettings.value)
-            if (!cachedSettings.value?.targetWeight || !cachedSettings.value?.targetDays) {
+            if (!cachedSettings.value?.targetWeight || !cachedSettings.value?.targetDays || !cachedSettings.value?.weeklyTargetDays) {
                 setShowTargetModal(true)
             }
         }
@@ -82,7 +90,7 @@ export function CalendarView() {
                 writeCache('user:settings', data.settings)
 
                 // Show target weight modal if not set
-                if (!data.settings.targetWeight || !data.settings.targetDays) {
+                if (!data.settings.targetWeight || !data.settings.targetDays || !data.settings.weeklyTargetDays) {
                     setShowTargetModal(true)
                 } else {
                     setShowTargetModal(false)
@@ -93,21 +101,128 @@ export function CalendarView() {
         }
     }, [accessToken])
 
-    const fetchCalendarData = useCallback(async () => {
+    const fetchCalendarData = useCallback(async (forDate?: Date) => {
         setIsLoading(true)
         try {
-            const currentMonth = format(new Date(), 'yyyy-MM')
-            const response = await fetch(`/api/attendance/calendar?month=${currentMonth}`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                },
+            const target = forDate ?? new Date()
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+            // Lightweight cache with 2h TTL and burst refresh rule (every 2nd refresh within same minute)
+            const bundleKey = 'calendar:bundle'
+            const minuteKey = 'calendar:lastMinute'
+            const countKey = 'calendar:minuteCount'
+            const now = new Date()
+            const currentMinute = format(now, 'yyyyMMddHHmm')
+
+            let minuteCount = 1
+            try {
+                const lastMinute = window.localStorage.getItem(minuteKey)
+                const rawCount = window.localStorage.getItem(countKey)
+                if (lastMinute === currentMinute && rawCount) {
+                    minuteCount = Math.max(1, parseInt(rawCount, 10) + 1)
+                }
+                window.localStorage.setItem(minuteKey, currentMinute)
+                window.localStorage.setItem(countKey, String(minuteCount))
+            } catch { }
+
+            const forceBurstRefresh = minuteCount % 2 === 0
+            const cached = readCache<any>(bundleKey)
+            const twoHoursMs = 2 * 60 * 60 * 1000
+            const isCacheValid = !!cached && (Date.now() - cached.timestamp) < twoHoursMs
+
+            if (isCacheValid && !forceBurstRefresh) {
+                const { calendar, highlights, suggested, golden } = cached.value || {}
+                setCalendarData(calendar || [])
+                setWeeklyHighlights(highlights || [])
+                setSuggestedWeekHighlights(suggested || [])
+                setGoldenDots(golden || [])
+                // Re-derive streak from cached highlights/calendar
+                const mergedCalendar = calendar || []
+                const mergedHighlights = highlights || []
+                const calendarMap = new Map<string, CalendarDay>(mergedCalendar.map((d: CalendarDay) => [d.date, d]))
+                const getWeekStartKey = (d: Date) => format(startOfWeek(d, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+                const countAttendedInWeek = (weekStartKey: string): number => {
+                    const weekStartDate = new Date(weekStartKey)
+                    let c = 0
+                    for (let i = 0; i < 7; i++) {
+                        const key = format(addDays(weekStartDate, i), 'yyyy-MM-dd')
+                        const day = calendarMap.get(key)
+                        if (day?.status === 'attended') c++
+                    }
+                    return c
+                }
+                const currentWeekKey = getWeekStartKey(new Date())
+                let total = countAttendedInWeek(currentWeekKey)
+                const highlightIndex = mergedHighlights.findIndex((h: WeeklyHighlight) => h.weekStart === currentWeekKey)
+                let idx = highlightIndex === -1 ? mergedHighlights.findIndex((h: WeeklyHighlight) => h.weekStart > currentWeekKey) - 1 : highlightIndex - 1
+                if (isNaN(idx)) idx = mergedHighlights.length - 1
+                for (let i = idx; i >= 0; i--) {
+                    const h = mergedHighlights[i]
+                    if (!h.achieved) break
+                    total += countAttendedInWeek(h.weekStart)
+                }
+                setStreakDays(total)
+                return
+            }
+
+            // Fetch only current and previous month
+            const currentMonth = format(target, 'yyyy-MM')
+            const previousMonth = format(subMonthsDate(target, 1), 'yyyy-MM')
+            const [resCurr, resPrev] = await Promise.all([
+                fetch(`/api/attendance/calendar?month=${currentMonth}&timeZone=${encodeURIComponent(tz)}`, { headers: { 'Authorization': `Bearer ${accessToken}` } }),
+                fetch(`/api/attendance/calendar?month=${previousMonth}&timeZone=${encodeURIComponent(tz)}`, { headers: { 'Authorization': `Bearer ${accessToken}` } }),
+            ])
+            const curr = resCurr.ok ? await resCurr.json() : { calendar: [], weeklyHighlights: [], suggestedWeekHighlights: [], goldenDots: [] }
+            const prev = resPrev.ok ? await resPrev.json() : { calendar: [], weeklyHighlights: [], suggestedWeekHighlights: [], goldenDots: [] }
+
+            const mergedByDate: Record<string, CalendarDay> = {}
+            const mergedHighlightMap: Record<string, WeeklyHighlight> = {}
+            for (const d of [...(curr.calendar || []), ...(prev.calendar || [])]) mergedByDate[d.date] = d
+            for (const w of [...(curr.weeklyHighlights || []), ...(prev.weeklyHighlights || [])]) mergedHighlightMap[w.weekStart] = w
+            const mergedCalendar = Object.values(mergedByDate).sort((a, b) => a.date.localeCompare(b.date))
+            const mergedHighlights = Object.values(mergedHighlightMap).sort((a, b) => a.weekStart.localeCompare(b.weekStart))
+            const allSuggestedWeekHighlights = [...(curr.suggestedWeekHighlights || []), ...(prev.suggestedWeekHighlights || [])]
+            const allGoldenDots = Array.from(new Set([...(curr.goldenDots || []), ...(prev.goldenDots || [])]))
+
+            setCalendarData(mergedCalendar)
+            setWeeklyHighlights(mergedHighlights)
+            setSuggestedWeekHighlights(allSuggestedWeekHighlights)
+            setGoldenDots(allGoldenDots)
+            writeCache('calendar:weeklyHighlights', mergedHighlights)
+            writeCache('calendar:data', mergedCalendar)
+            writeCache(bundleKey, {
+                calendar: mergedCalendar,
+                highlights: mergedHighlights,
+                suggested: allSuggestedWeekHighlights,
+                golden: allGoldenDots,
             })
 
-            if (response.ok) {
-                const data = await response.json()
-                setCalendarData(data.calendar || [])
-                writeCache('calendar:data', data.calendar || [])
+            // Compute streak days from merged data
+            const calendarMap = new Map<string, CalendarDay>(mergedCalendar.map(d => [d.date, d]))
+            const getWeekStartKey = (d: Date) => format(startOfWeek(d, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+            const countAttendedInWeek = (weekStartKey: string): number => {
+                const weekStartDate = new Date(weekStartKey)
+                let c = 0
+                for (let i = 0; i < 7; i++) {
+                    const key = format(addDays(weekStartDate, i), 'yyyy-MM-dd')
+                    const day = calendarMap.get(key)
+                    if (day?.status === 'attended') c++
+                }
+                return c
             }
+
+            const currentWeekKey = getWeekStartKey(new Date())
+            let total = countAttendedInWeek(currentWeekKey)
+            // Walk back through achieved weeks before current week
+            const highlightIndex = mergedHighlights.findIndex(h => h.weekStart === currentWeekKey)
+            let idx = highlightIndex === -1 ? mergedHighlights.findIndex(h => h.weekStart > currentWeekKey) - 1 : highlightIndex - 1
+            if (isNaN(idx)) idx = mergedHighlights.length - 1
+            for (let i = idx; i >= 0; i--) {
+                const h = mergedHighlights[i]
+                if (!h.achieved) break
+                total += countAttendedInWeek(h.weekStart)
+            }
+            setStreakDays(total)
         } catch (error) {
             console.error('Failed to fetch calendar data:', error)
         } finally {
@@ -175,6 +290,7 @@ export function CalendarView() {
                 },
                 body: JSON.stringify({
                     date: date.toISOString(),
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 }),
             })
 
@@ -184,15 +300,22 @@ export function CalendarView() {
                 throw new Error(data.error || 'Check-in failed')
             }
 
+            const description = (() => {
+                if (!date) return 'Successfully checked in.'
+                if (isToday(date)) return 'Successfully checked in for today.'
+                if (isYesterday(date)) return 'Successfully checked in for yesterday.'
+                return `Successfully checked in for ${format(date, 'MMM d, yyyy')}.`
+            })()
+
             toast({
                 title: 'Checked in!',
                 description: data.suggestMakeup
                     ? 'This is an extra session. You can assign it as a make-up.'
-                    : 'Successfully checked in for today.',
+                    : description,
             })
 
-            // Refresh calendar data
-            await fetchCalendarData()
+            // Refresh calendar for the month of the selected date
+            await fetchCalendarData(date)
         } catch (error: any) {
             toast({
                 title: 'Error',
@@ -200,6 +323,12 @@ export function CalendarView() {
                 variant: 'destructive',
             })
         }
+    }
+
+    const handleDateSelect = (d: Date) => {
+        setDate(d)
+        // Fetch calendar data for the month being viewed/selected
+        fetchCalendarData(d)
     }
 
     return (
@@ -223,6 +352,7 @@ export function CalendarView() {
                             <p className="text-sm md:text-base text-muted-foreground font-medium">
                                 Let&apos;s crush today&apos;s goals 💪
                             </p>
+                            {null}
                         </div>
 
                         {/* View Mode Toggle - Redesigned */}
@@ -278,8 +408,13 @@ export function CalendarView() {
                             <ModernCalendar
                                 calendarData={calendarData}
                                 selectedDate={date}
-                                onDateSelect={setDate}
+                                onDateSelect={handleDateSelect}
                                 onCheckIn={handleCheckIn}
+                                weeklyHighlights={weeklyHighlights}
+                                suggestedWeekHighlights={suggestedWeekHighlights}
+                                goldenDots={goldenDots}
+                                streakDaysOverride={streakDays}
+                                weeklyTargetDays={userSettings?.weeklyTargetDays}
                             />
                         ) : (
                             <HeatmapCalendar

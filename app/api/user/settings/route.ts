@@ -13,6 +13,7 @@ const updateSettingsSchema = z.object({
   height: z.number().positive().optional(),
   targetWeight: z.number().positive().optional(),
   targetDays: z.number().positive().int().optional(),
+  weeklyTargetDays: z.number().int().min(1).max(7).optional(),
 })
 
 // PUT /api/user/settings
@@ -33,6 +34,7 @@ async function updateSettings(req: AuthenticatedRequest) {
     if (data.height !== undefined) updateFields['settings.height'] = data.height
     if (data.targetWeight !== undefined) updateFields['settings.targetWeight'] = data.targetWeight
     if (data.targetDays !== undefined) updateFields['settings.targetDays'] = data.targetDays
+    if (data.weeklyTargetDays !== undefined) updateFields['settings.weeklyTargetDays'] = data.weeklyTargetDays
 
     const user = await User.findByIdAndUpdate(
       req.user!.userId,
@@ -83,4 +85,5 @@ async function getSettings(req: AuthenticatedRequest) {
 }
 
 export const PUT = withAuth(updateSettings)
+export const PATCH = withAuth(updateSettings)
 export const GET = withAuth(getSettings)

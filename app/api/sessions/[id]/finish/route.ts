@@ -5,10 +5,12 @@ import { Session } from '@/lib/models/Session'
 import { Attendance } from '@/lib/models/Attendance'
 import { withAuth, AuthenticatedRequest } from '@/lib/auth-middleware'
 import mongoose from 'mongoose'
+import { getStartOfDayUtcForZone } from '@/lib/utils/time'
 
 const finishSessionSchema = z.object({
   checkIn: z.boolean().default(true),
   makeupForDate: z.string().optional(), // ISO date string
+  timeZone: z.string().optional(), // IANA time zone
 })
 
 // POST /api/sessions/:id/finish
@@ -59,13 +61,13 @@ async function finishSession(
 
     // Create or update attendance record
     if (data.checkIn) {
-      const sessionDate = new Date(session.date)
-      sessionDate.setHours(0, 0, 0, 0)
+      const userTz = data.timeZone || 'UTC'
+      const sessionDateUtc = getStartOfDayUtcForZone(new Date(session.date), userTz)
 
       await Attendance.findOneAndUpdate(
         {
           userId: req.user!.userId,
-          date: sessionDate,
+          date: sessionDateUtc,
         },
         {
           $set: {
@@ -77,13 +79,12 @@ async function finishSession(
 
       // If this is a make-up session, update the missed day
       if (data.makeupForDate) {
-        const makeupDate = new Date(data.makeupForDate)
-        makeupDate.setHours(0, 0, 0, 0)
+        const makeupDateUtc = getStartOfDayUtcForZone(new Date(data.makeupForDate), userTz)
 
         await Attendance.findOneAndUpdate(
           {
             userId: req.user!.userId,
-            date: makeupDate,
+            date: makeupDateUtc,
           },
           {
             $set: {

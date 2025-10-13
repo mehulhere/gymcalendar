@@ -4,9 +4,11 @@ import dbConnect from '@/lib/db'
 import { Attendance } from '@/lib/models/Attendance'
 import { Session } from '@/lib/models/Session'
 import { withAuth, AuthenticatedRequest } from '@/lib/auth-middleware'
+import { getStartOfDayUtcForZone } from '@/lib/utils/time'
 
 const checkinSchema = z.object({
   date: z.string(), // ISO date string
+  timeZone: z.string().optional(), // IANA time zone
 })
 
 // POST /api/attendance/checkin - Manual check-in without session
@@ -17,13 +19,15 @@ async function checkin(req: AuthenticatedRequest) {
 
     await dbConnect()
 
-    const checkInDate = new Date(data.date)
-    checkInDate.setHours(0, 0, 0, 0)
+    // Normalize to the user's local day start and store as UTC timestamp
+    const userTz = data.timeZone || 'UTC'
+    const inputDate = new Date(data.date)
+    const startOfUserDayUtc = getStartOfDayUtcForZone(inputDate, userTz)
 
     // Check if already checked in
     const existing = await Attendance.findOne({
       userId: req.user!.userId,
-      date: checkInDate,
+      date: startOfUserDayUtc,
     })
 
     if (existing && existing.status === 'attended') {
@@ -37,8 +41,8 @@ async function checkin(req: AuthenticatedRequest) {
     const sessionsToday = await Session.countDocuments({
       userId: req.user!.userId,
       date: {
-        $gte: checkInDate,
-        $lt: new Date(checkInDate.getTime() + 24 * 60 * 60 * 1000),
+        $gte: startOfUserDayUtc,
+        $lt: new Date(startOfUserDayUtc.getTime() + 24 * 60 * 60 * 1000),
       },
       status: 'completed',
       checkIn: true,
@@ -51,7 +55,7 @@ async function checkin(req: AuthenticatedRequest) {
     const attendance = await Attendance.findOneAndUpdate(
       {
         userId: req.user!.userId,
-        date: checkInDate,
+        date: startOfUserDayUtc,
       },
       {
         $set: {

@@ -7,7 +7,7 @@ import { withAuth, AuthenticatedRequest } from '@/lib/auth-middleware'
 
 const createPlanSchema = z.object({
   name: z.string().min(1),
-  sessionsPerWeek: z.number().min(1).max(7),
+  sessionsPerWeek: z.number().min(1).max(7).optional(),
   schedule: z.object({
     mode: z.enum(['weekday', 'sequence']),
     weekdayMap: z.record(z.string(), z.string()).optional(),
@@ -72,7 +72,7 @@ async function createPlan(req: AuthenticatedRequest) {
     const plan = await Plan.create({
       userId: req.user!.userId,
       name: data.name,
-      sessionsPerWeek: data.sessionsPerWeek,
+      sessionsPerWeek: data.sessionsPerWeek ?? data.days.length,
       schedule: {
         mode: data.schedule.mode,
         weekdayMap: data.schedule.weekdayMap,

@@ -13,14 +13,21 @@ interface CalendarDay {
     hasDoubleSession: boolean
 }
 
+type WeeklyHighlight = { weekStart: string; achieved: boolean }
+
 interface ModernCalendarProps {
     calendarData: CalendarDay[]
     selectedDate: Date | undefined
     onDateSelect: (date: Date) => void
     onCheckIn: () => void
+    weeklyHighlights?: WeeklyHighlight[]
+    suggestedWeekHighlights?: string[]
+    goldenDots?: string[]
+    streakDaysOverride?: number
+    weeklyTargetDays?: number
 }
 
-export function ModernCalendar({ calendarData, selectedDate, onDateSelect, onCheckIn }: ModernCalendarProps) {
+export function ModernCalendar({ calendarData, selectedDate, onDateSelect, onCheckIn, weeklyHighlights = [], suggestedWeekHighlights = [], goldenDots = [], streakDaysOverride, weeklyTargetDays }: ModernCalendarProps) {
     const [currentMonth, setCurrentMonth] = useState(new Date())
     const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
 
@@ -88,7 +95,7 @@ export function ModernCalendar({ calendarData, selectedDate, onDateSelect, onChe
 
     const attendedCount = currentMonthStats.filter(d => d.status === 'attended').length
     const missedCount = currentMonthStats.filter(d => d.status === 'missed').length
-    const streak = calculateStreak()
+    const streak = typeof streakDaysOverride === 'number' ? streakDaysOverride : calculateStreak()
 
     function calculateStreak(): number {
         const sorted = [...calendarData]
@@ -123,16 +130,18 @@ export function ModernCalendar({ calendarData, selectedDate, onDateSelect, onChe
                     <h2 className="text-3xl font-bold tracking-tight">
                         {format(currentMonth, 'MMMM yyyy')}
                     </h2>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                         <div className="flex items-center gap-1">
                             <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                             <span>{attendedCount} days</span>
                         </div>
                         {streak > 0 && (
-                            <div className="flex items-center gap-1 text-orange-500">
-                                <Flame className="h-4 w-4" />
-                                <span className="font-semibold">{streak} day streak</span>
-                            </div>
+                            <>
+                                <div className="flex items-center gap-1 text-orange-500">
+                                    <Flame className="h-4 w-4 shrink-0" />
+                                    <span className="font-semibold">{streak} day streak</span>
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>
@@ -170,54 +179,100 @@ export function ModernCalendar({ calendarData, selectedDate, onDateSelect, onChe
                     ))}
                 </div>
 
-                {/* Calendar Days */}
-                <div className="grid grid-cols-7 gap-2">
-                    {calendarDays.map((day, index) => {
-                        const status = getDateStatus(day)
-                        const dayNumber = format(day, 'd')
-                        const isCurrentMonth = isSameMonth(day, currentMonth)
+                {/* Calendar Weeks */}
+                <div className="space-y-2">
+                    {Array.from({ length: Math.ceil(calendarDays.length / 7) }).map((_, weekIndex) => {
+                        const weekStart = weekIndex * 7
+                        const weekDays = calendarDays.slice(weekStart, weekStart + 7)
+                        // Use Monday as week key to match API grouping
+                        const mondayOfRow = weekDays[0]
+                        const weekStartKey = format(mondayOfRow, 'yyyy-MM-dd')
+                        const weekAchieved = weeklyHighlights.find(w => w.weekStart === weekStartKey)?.achieved
+                        const suggestHighlight = suggestedWeekHighlights.includes(weekStartKey)
+                        // Determine the first and last column indexes that belong to currentMonth
+                        const firstInMonthIdx = weekDays.findIndex(d => isSameMonth(d, currentMonth))
+                        let lastInMonthIdx = -1
+                        for (let i = 6; i >= 0; i--) {
+                            if (isSameMonth(weekDays[i], currentMonth)) { lastInMonthIdx = i; break }
+                        }
 
                         return (
-                            <div
-                                key={index}
-                                className={getDayStyle(day)}
-                                onClick={() => onDateSelect(day)}
-                                onMouseEnter={() => setHoveredDate(day)}
-                                onMouseLeave={() => setHoveredDate(null)}
-                            >
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className={`
-                    text-sm font-semibold transition-all
-                    ${status?.status === 'attended' || status?.status === 'missed' || isToday(day)
-                                            ? 'text-white'
-                                            : isCurrentMonth
-                                                ? 'text-foreground'
-                                                : 'text-muted-foreground'
-                                        }
-                  `}>
-                                        {dayNumber}
-                                    </span>
-                                </div>
-
-                                {/* Indicator Dot */}
-                                {status?.hasDoubleSession && (
-                                    <div className="absolute top-1 right-1">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-lg"></div>
+                            <div key={weekIndex} className="relative">
+                                {/* Full Week Highlight Background limited to current month days */}
+                                {(weekAchieved || suggestHighlight) && firstInMonthIdx !== -1 && lastInMonthIdx !== -1 && (
+                                    <div className="absolute inset-x-[-8px] -top-1 -bottom-1 pointer-events-none -z-10">
+                                        <div className="grid grid-cols-7 h-full">
+                                            <div
+                                                style={{ gridColumn: `${firstInMonthIdx + 1} / ${lastInMonthIdx + 2}` }}
+                                                className={`h-full rounded-xl border ${suggestHighlight
+                                                    ? 'bg-gradient-to-r from-emerald-500/30 via-emerald-500/40 to-emerald-500/30 border-emerald-500/40'
+                                                    : 'bg-gradient-to-r from-emerald-500/30 via-emerald-500/40 to-emerald-500/30 dark:from-emerald-500/35 dark:via-emerald-500/45 dark:to-emerald-500/35 border-emerald-500/40 dark:border-emerald-400/40'}`}
+                                            />
+                                        </div>
                                     </div>
                                 )}
 
-                                {/* Hover Tooltip */}
-                                {hoveredDate && isSameDay(day, hoveredDate) && isCurrentMonth && (
-                                    <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-black text-white text-xs rounded-lg whitespace-nowrap z-50 shadow-xl">
-                                        {format(day, 'MMM d, yyyy')}
-                                        {status && (
-                                            <div className="font-semibold capitalize mt-0.5">
-                                                {status.status}
+                                {/* Week Row */}
+                                <div className="relative grid grid-cols-7 gap-2">
+                                    {weekDays.map((day, dayIndex) => {
+                                        const status = getDateStatus(day)
+                                        const dayNumber = format(day, 'd')
+                                        const isCurrentMonth = isSameMonth(day, currentMonth)
+                                        const index = weekStart + dayIndex
+                                        const dateKey = format(day, 'yyyy-MM-dd')
+                                        const isGolden = goldenDots.includes(dateKey)
+
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`relative ${getDayStyle(day)}`}
+                                                onClick={() => onDateSelect(day)}
+                                                onMouseEnter={() => setHoveredDate(day)}
+                                                onMouseLeave={() => setHoveredDate(null)}
+                                            >
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <span className={`
+                                        text-sm font-semibold transition-all
+                                        ${status?.status === 'attended' || status?.status === 'missed' || isToday(day)
+                                                            ? 'text-white'
+                                                            : isCurrentMonth
+                                                                ? 'text-foreground'
+                                                                : 'text-muted-foreground'
+                                                        }
+                                      `}>
+                                                        {dayNumber}
+                                                    </span>
+                                                </div>
+
+                                                {/* Indicator Dots (only one per day) */}
+                                                {isGolden ? (
+                                                    <div className="absolute top-1 left-1">
+                                                        <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.9)]"></div>
+                                                    </div>
+                                                ) : (
+                                                    status?.hasDoubleSession && (
+                                                        <div className="absolute top-1 right-1">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-lg"></div>
+                                                        </div>
+                                                    )
+                                                )}
+
+                                                {/* Hover Tooltip */}
+                                                {hoveredDate && isSameDay(day, hoveredDate) && isCurrentMonth && (
+                                                    <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 px-3 py-1.5 bg-black text-white text-xs rounded-lg whitespace-nowrap z-50 shadow-xl">
+                                                        {format(day, 'MMM d, yyyy')}
+                                                        {status && (
+                                                            <div className="font-semibold capitalize mt-0.5">
+                                                                {status.status}
+                                                            </div>
+                                                        )}
+                                                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-black rotate-45"></div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-black rotate-45"></div>
-                                    </div>
-                                )}
+                                        )
+                                    })}
+                                </div>
                             </div>
                         )
                     })}
@@ -241,7 +296,7 @@ export function ModernCalendar({ calendarData, selectedDate, onDateSelect, onChe
             </button>
 
             {/* Activity Stats */}
-            <ActivityStats calendarData={calendarData} timeRange={30} />
+            <ActivityStats calendarData={calendarData} timeRange={30} streakOverride={streak} weeklyTargetDays={weeklyTargetDays} />
         </div>
     )
 }

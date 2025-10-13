@@ -18,11 +18,12 @@ export function TargetWeightModal({ onComplete }: TargetWeightModalProps) {
     const [targetWeight, setTargetWeight] = useState('')
     const [targetDays, setTargetDays] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [weeklyTargetDays, setWeeklyTargetDays] = useState('')
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!targetWeight || !targetDays) {
+        if (!targetWeight || !targetDays || !weeklyTargetDays) {
             toast({
                 title: 'Error',
                 description: 'Please fill in all fields',
@@ -43,6 +44,7 @@ export function TargetWeightModal({ onComplete }: TargetWeightModalProps) {
                 body: JSON.stringify({
                     targetWeight: parseFloat(targetWeight),
                     targetDays: parseInt(targetDays),
+                    weeklyTargetDays: parseInt(weeklyTargetDays),
                 }),
             })
 
@@ -112,6 +114,21 @@ export function TargetWeightModal({ onComplete }: TargetWeightModalProps) {
                             value={targetDays}
                             onChange={(e) => setTargetDays(e.target.value)}
                             min="1"
+                            step="1"
+                            className="h-12 border-border/50 bg-background/80 focus-visible:ring-emerald-500"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="weeklyTargetDays">Workouts per Week</Label>
+                        <Input
+                            id="weeklyTargetDays"
+                            type="number"
+                            placeholder="e.g., 3"
+                            value={weeklyTargetDays}
+                            onChange={(e) => setWeeklyTargetDays(e.target.value)}
+                            min="1"
+                            max="7"
                             step="1"
                             className="h-12 border-border/50 bg-background/80 focus-visible:ring-emerald-500"
                         />

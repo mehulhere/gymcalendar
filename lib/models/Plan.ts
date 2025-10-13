@@ -91,7 +91,7 @@ const PlanSchema = new Schema<IPlan>({
   },
   sessionsPerWeek: {
     type: Number,
-    required: true,
+    required: false,
     min: 1,
     max: 7,
     default: 3

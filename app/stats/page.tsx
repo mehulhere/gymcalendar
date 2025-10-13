@@ -412,6 +412,19 @@ export default function StatsPage() {
                     </div>
                 </div>
 
+                {/* Weight Progress Chart */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Weight Progress</CardTitle>
+                        <CardDescription>Track your body weight over time</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <WeightChart
+                            weighIns={weighIns}
+                            targetWeight={userSettings?.targetWeight}
+                        />
+                    </CardContent>
+                </Card>
                 {/* Muscle Heatmap - Enhanced */}
                 <div className="relative">
                     <div className="absolute -inset-1 gradient-emerald rounded-3xl opacity-5 blur-2xl" />
@@ -425,6 +438,43 @@ export default function StatsPage() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Top Trained Muscles */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Top Trained Muscles</CardTitle>
+                        <CardDescription>This week&apos;s focus areas</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {topMuscles.length > 0 ? (
+                            topMuscles.map(([muscle, volume]) => {
+                                const maxVolume = Math.max(...Object.values(volumeData.muscleVolumes))
+                                const percentage = (volume / maxVolume) * 100
+
+                                return (
+                                    <div key={muscle} className="space-y-1">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-medium capitalize">{muscle}</span>
+                                            <span className="text-muted-foreground">
+                                                {formatVolume(volume)} kg
+                                            </span>
+                                        </div>
+                                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-emerald-500 transition-all"
+                                                style={{ width: `${percentage}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            })
+                        ) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                                No workout data yet. Start training to see your stats!
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Exercise Personal Best Search */}
                 <Card className="bg-card/95 backdrop-blur-sm border-border/50">
@@ -499,114 +549,66 @@ export default function StatsPage() {
                                 )}
                             </div>
                         )}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
 
-            {/* Weekly & Monthly Progress */}
-            <Card className="bg-card/95 backdrop-blur-sm border-border/50">
-                <CardHeader className="pb-4">
-                    <CardTitle className="text-xl md:text-2xl font-bold">Weekly & Monthly Progress</CardTitle>
-                    <CardDescription>Track how your volume trends against the previous period</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {progressError && (
-                        <div className="text-sm text-destructive">{progressError}</div>
-                    )}
-
-                    {isLoadingProgress ? (
-                        <div className="flex items-center justify-center py-6 text-muted-foreground text-sm gap-2">
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            Calculating progress...
-                        </div>
-                    ) : !progressOverview ? (
-                        <div className="text-sm text-muted-foreground text-center py-6">
-                            Unable to calculate progress yet.
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {(['weekly', 'monthly'] as const).map(period => {
-                                const data = progressOverview[period]
-                                const trend = getTrendStyles(data.percentChange)
-                                const percent = formatPercent(data.percentChange)
-                                const targetRoute = `/stats/progress/${period}`
-                                const title = period === 'weekly' ? 'Weekly Progress' : 'Monthly Progress'
-                                return (
-                                    <button
-                                        key={period}
-                                        onClick={() => router.push(targetRoute)}
-                                        className="w-full text-left px-4 py-3 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40"
-                                    >
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-semibold text-foreground">{title}</p>
-                                                <span className={`inline-flex items-center gap-2 text-xs font-medium px-2 py-1 rounded-full ${trend.badge}`}>
-                                                    <span className="font-semibold">{percent}</span>
-                                                    <span>{trend.label}</span>
-                                                </span>
-                                                <div className="text-xs text-muted-foreground">
-                                                    Current: {formatVolume(data.currentVolume)} kg • Previous: {formatVolume(data.previousVolume)} kg
-                                                </div>
-                                            </div>
-                                            <ArrowUpRight className={`h-4 w-4 ${trend.text}`} />
-                                        </div>
-                                    </button>
-                                )
-                            })}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Top Trained Muscles */}
-            <Card>
-                    <CardHeader>
-                        <CardTitle>Top Trained Muscles</CardTitle>
-                        <CardDescription>This week&apos;s focus areas</CardDescription>
+                {/* Weekly & Monthly Progress */}
+                <Card className="bg-card/95 backdrop-blur-sm border-border/50">
+                    <CardHeader className="pb-4">
+                        <CardTitle className="text-xl md:text-2xl font-bold">Weekly & Monthly Progress</CardTitle>
+                        <CardDescription>Track how your volume trends against the previous period</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        {topMuscles.length > 0 ? (
-                            topMuscles.map(([muscle, volume]) => {
-                                const maxVolume = Math.max(...Object.values(volumeData.muscleVolumes))
-                                const percentage = (volume / maxVolume) * 100
+                        {progressError && (
+                            <div className="text-sm text-destructive">{progressError}</div>
+                        )}
 
-                                return (
-                                    <div key={muscle} className="space-y-1">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="font-medium capitalize">{muscle}</span>
-                                            <span className="text-muted-foreground">
-                                                {formatVolume(volume)} kg
-                                            </span>
-                                        </div>
-                                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-emerald-500 transition-all"
-                                                style={{ width: `${percentage}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                )
-                            })
+                        {isLoadingProgress ? (
+                            <div className="flex items-center justify-center py-6 text-muted-foreground text-sm gap-2">
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                Calculating progress...
+                            </div>
+                        ) : !progressOverview ? (
+                            <div className="text-sm text-muted-foreground text-center py-6">
+                                Unable to calculate progress yet.
+                            </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                                No workout data yet. Start training to see your stats!
-                            </p>
+                            <div className="space-y-2">
+                                {(['weekly', 'monthly'] as const).map(period => {
+                                    const data = progressOverview[period]
+                                    const trend = getTrendStyles(data.percentChange)
+                                    const percent = formatPercent(data.percentChange)
+                                    const targetRoute = `/stats/progress/${period}`
+                                    const title = period === 'weekly' ? 'Weekly Progress' : 'Monthly Progress'
+                                    return (
+                                        <button
+                                            key={period}
+                                            onClick={() => router.push(targetRoute)}
+                                            className="w-full text-left px-4 py-3 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="space-y-1">
+                                                    <p className="text-sm font-semibold text-foreground">{title}</p>
+                                                    <span className={`inline-flex items-center gap-2 text-xs font-medium px-2 py-1 rounded-full ${trend.badge}`}>
+                                                        <span className="font-semibold">{percent}</span>
+                                                        <span>{trend.label}</span>
+                                                    </span>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        Current: {formatVolume(data.currentVolume)} kg • Previous: {formatVolume(data.previousVolume)} kg
+                                                    </div>
+                                                </div>
+                                                <ArrowUpRight className={`h-4 w-4 ${trend.text}`} />
+                                            </div>
+                                        </button>
+                                    )
+                                })}
+                            </div>
                         )}
                     </CardContent>
                 </Card>
 
-                {/* Weight Progress Chart */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Weight Progress</CardTitle>
-                        <CardDescription>Track your body weight over time</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <WeightChart
-                            weighIns={weighIns}
-                            targetWeight={userSettings?.targetWeight}
-                        />
-                    </CardContent>
-                </Card>
+
+
 
                 {/* Weekly Progress */}
                 <Card>
